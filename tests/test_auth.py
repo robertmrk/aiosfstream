@@ -4,7 +4,7 @@ from asynctest import TestCase, mock
 from aiohttp.client_exceptions import ClientError
 
 from aiosfstream.auth import AuthenticatorBase, PasswordAuthenticator, \
-    TOKEN_URL
+    TOKEN_URL, RefreshTokenAuthenticator
 from aiosfstream.exceptions import AuthenticationError
 
 
@@ -125,6 +125,37 @@ class TestPasswordAuthenticator(TestCase):
             "client_secret": self.authenticator.client_secret,
             "username": self.authenticator.username,
             "password": self.authenticator.password
+        }
+
+        result = await self.authenticator._authenticate()
+
+        self.assertEqual(result, response_obj)
+        session.post.assert_called_with(TOKEN_URL, data=expected_data)
+        session.__aenter__.assert_called()
+        session.__aexit__.assert_called()
+
+
+class TestRefreshTokenAuthenticator(TestCase):
+    def setUp(self):
+        self.authenticator = RefreshTokenAuthenticator(
+            client_id="id",
+            client_secret="secret",
+            refresh_token="refresh_token"
+        )
+
+    @mock.patch("aiosfstream.auth.ClientSession")
+    async def test_authenticate(self, session_cls):
+        response_obj = mock.MagicMock()
+        session = mock.MagicMock()
+        session.__aenter__ = mock.CoroutineMock(return_value=session)
+        session.__aexit__ = mock.CoroutineMock()
+        session.post = mock.CoroutineMock(return_value=response_obj)
+        session_cls.return_value = session
+        expected_data = {
+            "grant_type": "refresh_token",
+            "client_id": self.authenticator.client_id,
+            "client_secret": self.authenticator.client_secret,
+            "refresh_token": self.authenticator.refresh_token
         }
 
         result = await self.authenticator._authenticate()

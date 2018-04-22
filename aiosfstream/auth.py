@@ -99,3 +99,34 @@ class PasswordAuthenticator(AuthenticatorBase):
                 "password": self.password
             }
             return await session.post(TOKEN_URL, data=data)
+
+
+class RefreshTokenAuthenticator(AuthenticatorBase):
+    """Authenticator for using the OAuth 2.0 Refresh Token Flow"""
+    def __init__(self, client_id, client_secret, refresh_token):
+        """
+        :param str client_id: Consumer key from the Salesforce connected app \
+        definition
+        :param str client_secret: Consumer secret from the Salesforce \
+        connected app definition
+        :param str refresh_token: A refresh token obtained from Salesforce \
+        by using one of its authentication methods (for example with the
+        OAuth 2.0 Web Server Authentication Flow)
+        """
+        super().__init__()
+        #: OAuth2 client id
+        self.client_id = client_id
+        #: OAuth2 client secret
+        self.client_secret = client_secret
+        #: Salesforce refresh token
+        self.refresh_token = refresh_token
+
+    async def _authenticate(self):
+        async with ClientSession() as session:
+            data = {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "refresh_token": self.refresh_token
+            }
+            return await session.post(TOKEN_URL, data=data)
