@@ -1,5 +1,5 @@
 """Replay extension classes"""
-from collections import namedtuple
+from collections import namedtuple, abc
 from abc import abstractmethod
 from enum import Enum, unique
 
@@ -95,3 +95,25 @@ class ReplayStorage(Extension):
         given *subscription*
         :rtype: ReplayId
         """
+
+
+class MappingReplayStorage(ReplayStorage):
+    """Mapping based replay id storage"""
+    def __init__(self, mapping):
+        """
+        :param mapping: A MutableMapping object for storing replay ids
+        :type mapping. collections.abc.MutableMapping
+        """
+        if not isinstance(mapping, abc.MutableMapping):
+            raise TypeError("mapping parameter should be an instance of "
+                            "MutableMapping.")
+        self.mapping = mapping
+
+    async def set_replay_id(self, subscription, replay_id):
+        self.mapping[subscription] = replay_id
+
+    async def get_replay_id(self, subscription):
+        try:
+            return self.mapping[subscription]
+        except KeyError:
+            return None

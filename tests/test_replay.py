@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from asynctest import TestCase, mock
 from aiocometd.constants import MetaChannel
 
-from aiosfstream.replay import ReplayStorage, ReplayId
+from aiosfstream.replay import ReplayStorage, ReplayId, MappingReplayStorage
 
 
 class ReplayStorageStub(ReplayStorage):
@@ -193,3 +193,49 @@ class TestReplayStorage(TestCase):
         await self.replay_storage.extract_replay_id(message)
 
         self.replay_storage.set_replay_id.assert_not_called()
+
+
+class TestMappingReplayStorage(TestCase):
+    def setUp(self):
+        self.mapping = {}
+        self.storage = MappingReplayStorage(self.mapping)
+
+    def test_init(self):
+        self.assertIs(self.storage.mapping, self.mapping)
+
+    def test_init_error_on_non_mapping(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "mapping parameter should be an "
+                                    "instance of MutableMapping."):
+            MappingReplayStorage([])
+
+    async def test_set_replay_id(self):
+        self.storage.mapping = mock.MagicMock()
+        subscription = "/foo/bar"
+        replay_id = ReplayId(creation_date="", id="id")
+
+        await self.storage.set_replay_id(subscription, replay_id)
+
+        self.storage.mapping.__setitem__.assert_called_with(subscription,
+                                                            replay_id)
+
+    async def test_get_replay_id(self):
+        subscription = "/foo/bar"
+        replay_id = ReplayId(creation_date="", id="id")
+        self.storage.mapping = mock.MagicMock()
+        self.storage.mapping.__getitem__.return_value = replay_id
+
+        result = await self.storage.get_replay_id(subscription)
+
+        self.assertEqual(result, replay_id)
+        self.storage.mapping.__getitem__.assert_called_with(subscription)
+
+    async def test_get_replay_id_none_on_key_error(self):
+        subscription = "/foo/bar"
+        self.storage.mapping = mock.MagicMock()
+        self.storage.mapping.__getitem__.side_effect = KeyError()
+
+        result = await self.storage.get_replay_id(subscription)
+
+        self.assertIsNone(result)
+        self.storage.mapping.__getitem__.assert_called_with(subscription)
