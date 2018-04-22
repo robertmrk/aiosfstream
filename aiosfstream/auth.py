@@ -2,6 +2,11 @@
 from abc import abstractmethod
 
 from aiocometd import AuthExtension
+from aiohttp import ClientSession
+
+
+AUTHORIZATION_URL = "https://login.salesforce.com/services/oauth2/authorize"
+TOKEN_URL = "https://login.salesforce.com/services/oauth2/token"
 
 
 class AuthenticatorBase(AuthExtension):
@@ -39,3 +44,28 @@ class AuthenticatorBase(AuthExtension):
         :return: The server's response
         :rtype: dict
         """
+
+
+class PasswordAuthenticator(AuthenticatorBase):
+    def __init__(self, client_id, client_secret, username, password):
+        super().__init__()
+        #: OAuth2 client id
+        self.client_id = client_id
+        #: OAuth2 client secret
+        self.client_secret = client_secret
+        #: Salesforce username
+        self.username = username
+        #: Salesforce password
+        self.password = password
+
+    async def _authenticate(self):
+        async with ClientSession() as session:
+            data = {
+                "grant_type": "password",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "username": self.username,
+                "password": self.password
+            }
+            response = await session.post(TOKEN_URL, data=data)
+            return await response.json()
