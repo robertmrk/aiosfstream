@@ -1,11 +1,14 @@
 """Authenticatior class implementations"""
 from abc import abstractmethod
+from http import HTTPStatus
 
 from aiocometd import AuthExtension
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientError
+
+from .exceptions import AuthenticationError
 
 
-AUTHORIZATION_URL = "https://login.salesforce.com/services/oauth2/authorize"
 TOKEN_URL = "https://login.salesforce.com/services/oauth2/token"
 
 
@@ -33,7 +36,24 @@ class AuthenticatorBase(AuthExtension):
         pass
 
     async def authenticate(self):
-        self._auth_response = await self._authenticate()
+        """Called on initialization and after a failed authentication attempt
+
+        :raise AuthenticationError: If the server rejects the authentication \
+        request or if a network failure occurs
+        """
+        try:
+            response = await self._authenticate()
+        except ClientError as error:
+            raise AuthenticationError("Network request failed") from error
+
+        response_data = await response.json()
+
+        if response.status != HTTPStatus.OK:
+            self._auth_response = None
+            self._auth_header = None
+            raise AuthenticationError("Authentication failed", response_data)
+
+        self._auth_response = response_data
         self._auth_header = (self._auth_response["token_type"] + " " +
                              self._auth_response["access_token"])
 
@@ -42,12 +62,23 @@ class AuthenticatorBase(AuthExtension):
         """Authenticate the user
 
         :return: The server's response
-        :rtype: dict
+        :rtype: aiohttp.ClientResponse
+        :raise aiohttp.client_exceptions.ClientError: If a network failure \
+        occurs
         """
 
 
 class PasswordAuthenticator(AuthenticatorBase):
+    """Authenticator for using the OAuth 2.0 Username-Password Flow"""
     def __init__(self, client_id, client_secret, username, password):
+        """
+        :param str client_id: Consumer key from the Salesforce connected app \
+        definition
+        :param str client_secret: Consumer secret from the Salesforce \
+        connected app definition
+        :param str username: User's username
+        :param str password: User's password
+        """
         super().__init__()
         #: OAuth2 client id
         self.client_id = client_id
@@ -67,5 +98,4 @@ class PasswordAuthenticator(AuthenticatorBase):
                 "username": self.username,
                 "password": self.password
             }
-            response = await session.post(TOKEN_URL, data=data)
-            return await response.json()
+            return await session.post(TOKEN_URL, data=data)

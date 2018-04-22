@@ -1,7 +1,11 @@
+from http import HTTPStatus
+
 from asynctest import TestCase, mock
+from aiohttp.client_exceptions import ClientError
 
 from aiosfstream.auth import AuthenticatorBase, PasswordAuthenticator, \
     TOKEN_URL
+from aiosfstream.exceptions import AuthenticationError
 
 
 class Authenticator(AuthenticatorBase):
@@ -44,8 +48,11 @@ class TestAuthenticatorBase(TestCase):
             "token_type": "type",
             "access_token": "token"
         }
+        response_obj = mock.MagicMock()
+        response_obj.status = HTTPStatus.OK
+        response_obj.json = mock.CoroutineMock(return_value=response)
         self.authenticator._authenticate = mock.CoroutineMock(
-            return_value=response
+            return_value=response_obj
         )
 
         await self.authenticator.authenticate()
@@ -55,6 +62,37 @@ class TestAuthenticatorBase(TestCase):
             self.authenticator._auth_header,
             response["token_type"] + " " + response["access_token"]
         )
+
+    async def test_authenticate_non_ok_status_code(self):
+        response = {
+            "token_type": "type",
+            "access_token": "token"
+        }
+        response_obj = mock.MagicMock()
+        response_obj.status = HTTPStatus.BAD_REQUEST
+        response_obj.json = mock.CoroutineMock(return_value=response)
+        self.authenticator._authenticate = mock.CoroutineMock(
+            return_value=response_obj
+        )
+
+        with self.assertRaisesRegex(AuthenticationError,
+                                    "Authentication failed"):
+            await self.authenticator.authenticate()
+
+        self.assertIsNone(self.authenticator._auth_response)
+        self.assertIsNone(self.authenticator._auth_header)
+
+    async def test_authenticate_on_network_error(self):
+        self.authenticator._authenticate = mock.CoroutineMock(
+            side_effect=ClientError()
+        )
+
+        with self.assertRaisesRegex(AuthenticationError,
+                                    "Network request failed"):
+            await self.authenticator.authenticate()
+
+        self.assertIsNone(self.authenticator._auth_response)
+        self.assertIsNone(self.authenticator._auth_header)
 
     async def test_incoming(self):
         payload = []
@@ -75,9 +113,7 @@ class TestPasswordAuthenticator(TestCase):
 
     @mock.patch("aiosfstream.auth.ClientSession")
     async def test_authenticate(self, session_cls):
-        response = object()
         response_obj = mock.MagicMock()
-        response_obj.json = mock.CoroutineMock(return_value=response)
         session = mock.MagicMock()
         session.__aenter__ = mock.CoroutineMock(return_value=session)
         session.__aexit__ = mock.CoroutineMock()
@@ -93,7 +129,7 @@ class TestPasswordAuthenticator(TestCase):
 
         result = await self.authenticator._authenticate()
 
-        self.assertEqual(result, response)
+        self.assertEqual(result, response_obj)
         session.post.assert_called_with(TOKEN_URL, data=expected_data)
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
