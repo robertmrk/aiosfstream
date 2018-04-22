@@ -75,8 +75,8 @@ class PasswordAuthenticator(AuthenticatorBase):
         app definition
         :param str consumer_secret: Consumer secret from the Salesforce \
         connected app definition
-        :param str username: User's username
-        :param str password: User's password
+        :param str username: Salesforce username
+        :param str password: Salesforce password
         """
         super().__init__()
         #: OAuth2 client id
@@ -119,7 +119,7 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
         :param str consumer_secret: Consumer secret from the Salesforce \
         connected app definition
         :param str refresh_token: A refresh token obtained from Salesforce \
-        by using one of its authentication methods (for example with the
+        by using one of its authentication methods (for example with the \
         OAuth 2.0 Web Server Authentication Flow)
         """
         super().__init__()
