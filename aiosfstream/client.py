@@ -18,13 +18,31 @@ def get_cometd_url(instance_url):
 
 class Client(CometdClient):
     """Salesforce Streaming API client"""
-    def __init__(self, authenticator):
+    def __init__(self, authenticator, *, connection_timeout=10.0,
+                 max_pending_count=100, loop=None):
         """
         :param authenticator: An authenticator object
         :type authenticator: aiosfstream.auth.AuthenticatorBase
+        :param connection_timeout: The maximum amount of time to wait for the \
+        transport to re-establish a connection with the server when the \
+        connection fails.
+        :type connection_timeout: int, float or None
+        :param int max_pending_count: The maximum number of messages to \
+        prefetch from the server. If the number of prefetched messages reach \
+        this size then the connection will be suspended, until messages are \
+        consumed. \
+        If it is less than or equal to zero, the count is infinite.
+        :param loop: Event :obj:`loop <asyncio.BaseEventLoop>` used to
+                     schedule tasks. If *loop* is ``None`` then
+                     :func:`asyncio.get_event_loop` is used to get the default
+                     event loop.
         """
         # set authenticator as the auth extension
-        super().__init__("", auth=authenticator)
+        super().__init__("",
+                         auth=authenticator,
+                         connection_timeout=connection_timeout,
+                         max_pending_count=max_pending_count,
+                         loop=loop)
 
     async def open(self):
         """Establish a connection with the Streaming API endpoint

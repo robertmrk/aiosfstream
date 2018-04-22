@@ -21,10 +21,19 @@ class TestClient(TestCase):
         self.client = Client(self.authenticator)
 
     def test_init(self):
-        client = Client(self.authenticator)
+        connection_timeout = 20
+        max_pending_count = 1
+        loop = object()
+        client = Client(self.authenticator,
+                        connection_timeout=connection_timeout,
+                        max_pending_count=max_pending_count,
+                        loop=loop)
 
         self.assertEqual(client.url, "")
         self.assertEqual(client.auth, self.authenticator)
+        self.assertEqual(client.connection_timeout, connection_timeout)
+        self.assertEqual(client._max_pending_count, max_pending_count)
+        self.assertEqual(client._loop, loop)
 
     @mock.patch("aiosfstream.client.CometdClient.open")
     @mock.patch("aiosfstream.client.get_cometd_url")
