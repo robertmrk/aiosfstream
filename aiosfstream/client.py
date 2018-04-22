@@ -1,6 +1,8 @@
 """Client class implementation"""
 from aiocometd import Client as CometdClient
 
+from .auth import AuthenticatorBase
+
 
 COMETD_PATH = "cometd"
 API_VERSION = "42.0"
@@ -37,6 +39,10 @@ class Client(CometdClient):
                      :func:`asyncio.get_event_loop` is used to get the default
                      event loop.
         """
+        if not isinstance(authenticator, AuthenticatorBase):
+            raise ValueError(f"authenticator should be an instance of "
+                             f"{AuthenticatorBase.__name__}.")
+
         # set authenticator as the auth extension
         super().__init__("",
                          auth=authenticator,

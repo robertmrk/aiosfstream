@@ -35,6 +35,12 @@ class TestClient(TestCase):
         self.assertEqual(client._max_pending_count, max_pending_count)
         self.assertEqual(client._loop, loop)
 
+    def test_init_vefiries_authenticator(self):
+        with self.assertRaisesRegex(ValueError,
+                                    f"authenticator should be an instance of "
+                                    f"{AuthenticatorBase.__name__}."):
+            Client(object())
+
     @mock.patch("aiosfstream.client.CometdClient.open")
     @mock.patch("aiosfstream.client.get_cometd_url")
     async def test_open(self, get_cometd_url, super_open):
