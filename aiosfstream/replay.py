@@ -76,9 +76,7 @@ class ReplayMarkerStorage(Extension):
         # marker for the subscription yet, or if the stored replay marker is\
         # older then the extracted one (otherwise, we're seeing a replayed \
         # message, and in that case, it shouldn't be stored)
-        if (not last_marker or
-                (last_marker and
-                 last_marker.date < marker.date)):
+        if not last_marker or last_marker.date < marker.date:
             await self.set_replay_marker(subscription, marker)
 
     async def get_replay_id(self, subscription):
@@ -106,7 +104,7 @@ class ReplayMarkerStorage(Extension):
 
     @abstractmethod
     async def set_replay_marker(self, subscription, replay_marker):
-        """Store the *replay_id* for the given *subscription*
+        """Store the *default_id* for the given *subscription*
 
         :param str subscription: Name of the subscribed channel
         :param ReplayMarker replay_marker: A replay marker
@@ -135,7 +133,31 @@ class MappingStorage(ReplayMarkerStorage):
             return None
 
 
-class ConstantReplayId(ReplayMarkerStorage):
+class DefaultReplayIdMixin:  # pylint: disable=too-few-public-methods
+    """A mixin class that will return a default, constant replay id if
+    there is not replay marker for the given subscription"""
+    def __init__(self, default_id, **kwargs):
+        """
+        :param int default_id: A replay id
+        """
+        super().__init__(**kwargs)
+        self.default_id = default_id
+
+    async def get_replay_id(self, subscription):
+        """Retrieve a stored replay id for the given *subscription*
+
+        :param str subscription: Name of the subscribed channel
+        :return: The default, constant replay id if there is not replay \
+        marker for the given subscription
+        :rtype: int
+        """
+        marker = await self.get_replay_marker(subscription)
+        if marker:
+            return marker.replay_id
+        return self.default_id
+
+
+class ConstantReplayId(DefaultReplayIdMixin, ReplayMarkerStorage):
     """A replay marker storage which will return a constant replay id for
     every channel
 
@@ -144,14 +166,20 @@ class ConstantReplayId(ReplayMarkerStorage):
         This implementations doesn't actually stores anything for later
         retrieval. Calls to :meth:`set_replay_marker` are ignored.
     """
-    def __init__(self, replay_option):
-        self.replay_id = replay_option
-
-    async def get_replay_id(self, subscription):
-        return self.replay_id
-
     async def set_replay_marker(self, subscription, replay_marker):
         pass
 
     async def get_replay_marker(self, subscription):
         return None
+
+
+class DefaultMappingStorage(DefaultReplayIdMixin, MappingStorage):
+    """Mapping based replay marker storage which will return a defualt
+    replay id if there is not replay marker for the given subscription """
+    def __init__(self, mapping, default_id):
+        """
+        :param mapping: A MutableMapping object for storing replay markers
+        :type mapping. collections.abc.MutableMapping
+         :param int default_id: A replay id
+        """
+        super().__init__(mapping=mapping, default_id=default_id)

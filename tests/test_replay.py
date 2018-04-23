@@ -4,7 +4,8 @@ from asynctest import TestCase, mock
 from aiocometd.constants import MetaChannel
 
 from aiosfstream.replay import ReplayMarkerStorage, ReplayMarker, \
-    MappingStorage, ConstantReplayId
+    MappingStorage, ConstantReplayId, DefaultMappingStorage, \
+    DefaultReplayIdMixin
 
 
 class ReplayMarkerStorageStub(ReplayMarkerStorage):
@@ -266,7 +267,7 @@ class TestConstantReplayId(TestCase):
     async def test_get_replay_id(self):
         result = await self.replay_storage.get_replay_id("subscription")
 
-        self.assertEqual(result, self.replay_storage.replay_id)
+        self.assertEqual(result, self.replay_storage.default_id)
 
     async def test_get_replay_marker(self):
         result = await self.replay_storage.get_replay_marker("subscription")
@@ -276,3 +277,43 @@ class TestConstantReplayId(TestCase):
     async def test_set_replay_marker(self):
         marker = ReplayMarker(date="", replay_id="id")
         await self.replay_storage.set_replay_marker("subscription", marker)
+
+
+class TestDefaultReplayIdMixin(TestCase):
+    def setUp(self):
+        self.replay_id = "default_id"
+        self.storage = DefaultReplayIdMixin(self.replay_id)
+
+    async def test_get_replay_id_returns_marker_id(self):
+        marker = ReplayMarker(date="", replay_id="id")
+        subscription = "/foo/bar"
+        self.storage.get_replay_marker = mock.CoroutineMock(
+            return_value=marker)
+
+        result = await self.storage.get_replay_id(subscription)
+
+        self.assertEqual(result, marker.replay_id)
+        self.storage.get_replay_marker.assert_called_with(subscription)
+
+    async def test_get_replay_id_returns_default_id_if_marker_none(self):
+        marker = None
+        subscription = "/foo/bar"
+        self.storage.get_replay_marker = mock.CoroutineMock(
+            return_value=marker)
+
+        result = await self.storage.get_replay_id(subscription)
+
+        self.assertEqual(result, self.storage.default_id)
+        self.storage.get_replay_marker.assert_called_with(subscription)
+
+
+class TestDefaultMappingReplayStorage(TestDefaultReplayIdMixin,
+                                      TestMappingReplayStorage):
+    def setUp(self):
+        self.mapping = {}
+        self.replay_id = "default_id"
+        self.storage = DefaultMappingStorage(self.mapping, self.replay_id)
+
+    def test_init(self):
+        self.assertIs(self.storage.mapping, self.mapping)
+        self.assertIs(self.storage.default_id, self.replay_id)

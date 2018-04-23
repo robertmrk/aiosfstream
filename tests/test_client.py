@@ -101,7 +101,7 @@ class TestCreateReplayStorage(TestCase):
         result = Client.create_replay_storage(replay)
 
         self.assertIsInstance(result, ConstantReplayId)
-        self.assertIs(result.replay_id, replay)
+        self.assertIs(result.default_id, replay)
 
     def test_returns_none_for_none_param(self):
         replay = None
