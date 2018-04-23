@@ -31,6 +31,29 @@ Authenticators
 .. autoclass:: RefreshTokenAuthenticator
     :members:
 
+
+Replay
+------
+
+.. autoclass:: aiosfstream.replay.ReplayOption
+    :members:
+    :undoc-members:
+
+.. autoclass:: aiosfstream.replay.ReplayMarker
+    :members:
+    :show-inheritance:
+
+.. autoclass:: aiosfstream.replay.ReplayMarkerStorage
+
+    .. autocomethod:: get_replay_marker
+    .. autocomethod:: set_replay_marker
+
+.. autoclass:: aiosfstream.replay.MappingStorage
+
+.. autoclass:: aiosfstream.replay.DefaultMappingStorage
+
+.. autoclass:: aiosfstream.replay.ConstantReplayId
+
 Exceptions
 ----------
 
