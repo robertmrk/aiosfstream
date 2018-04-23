@@ -1,5 +1,7 @@
 from asynctest import TestCase, mock
 
+from aiocometd.exceptions import ServerError
+
 from aiosfstream.client import Client, COMETD_PATH, API_VERSION
 from aiosfstream.auth import AuthenticatorBase
 from aiosfstream.replay import ReplayMarkerStorage, MappingStorage, \
@@ -53,6 +55,9 @@ class TestClient(TestCase):
         self.assertEqual(client.auth, self.authenticator)
         self.assertEqual(client.extensions,
                          [create_replay_storage.return_value])
+        self.assertEqual(client.replay_storage,
+                         create_replay_storage.return_value)
+        self.assertIsNone(client.replay_fallback)
         create_replay_storage.assert_called_with(replay_param)
 
     @mock.patch("aiosfstream.client.Client.create_replay_storage")
@@ -65,6 +70,8 @@ class TestClient(TestCase):
 
         self.assertEqual(client.auth, self.authenticator)
         self.assertIsNone(client.extensions)
+        self.assertIsNone(client.replay_storage)
+        self.assertIsNone(client.replay_fallback)
         create_replay_storage.assert_called_with(replay_param)
 
     @mock.patch("aiosfstream.client.CometdClient.open")
@@ -77,6 +84,75 @@ class TestClient(TestCase):
         self.authenticator.authenticate.assert_called()
         self.assertEqual(self.client.url, get_cometd_url.return_value)
         super_open.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.subscribe")
+    async def test_subscribe_successful(self, super_subscribe):
+        channel = "/foo/bar"
+
+        await self.client.subscribe(channel)
+
+        super_subscribe.assert_called_with(channel)
+
+    @mock.patch("aiosfstream.client.CometdClient.subscribe")
+    async def test_subscribe_error_with_fallback_and_storage(self,
+                                                             super_subscribe):
+        channel = "/foo/bar"
+        self.client.replay_fallback = object()
+        self.client.replay_storage = mock.MagicMock()
+        error = ServerError("message", {"error": "400::"})
+        super_subscribe.side_effect = [error, None]
+
+        await self.client.subscribe(channel)
+
+        super_subscribe.assert_has_calls([mock.call(channel)] * 2)
+        self.assertEqual(self.client.replay_storage.replay_fallback,
+                         self.client.replay_fallback)
+
+    @mock.patch("aiosfstream.client.CometdClient.subscribe")
+    async def test_subscribe_error_without_fallback_and_storage(
+            self, super_subscribe):
+        channel = "/foo/bar"
+        self.client.replay_fallback = None
+        self.client.replay_storage = mock.MagicMock()
+        self.client.replay_storage.replay_fallback = None
+        error = ServerError("message", {"error": "400::"})
+        super_subscribe.side_effect = [error, None]
+
+        with self.assertRaises(ServerError):
+            await self.client.subscribe(channel)
+
+        super_subscribe.assert_called_with(channel)
+        self.assertIsNone(self.client.replay_storage.replay_fallback)
+
+    @mock.patch("aiosfstream.client.CometdClient.subscribe")
+    async def test_subscribe_error_with_fallback_without_storage(
+            self, super_subscribe):
+        channel = "/foo/bar"
+        self.client.replay_fallback = object()
+        self.client.replay_storage = None
+        error = ServerError("message", {"error": "400::"})
+        super_subscribe.side_effect = [error, None]
+
+        with self.assertRaises(ServerError):
+            await self.client.subscribe(channel)
+
+        super_subscribe.assert_called_with(channel)
+
+    @mock.patch("aiosfstream.client.CometdClient.subscribe")
+    async def test_subscribe_different_error_with_fallback_and_storage(
+            self, super_subscribe):
+        channel = "/foo/bar"
+        self.client.replay_fallback = object()
+        self.client.replay_storage = mock.MagicMock()
+        self.client.replay_storage.replay_fallback = None
+        error = ServerError("message", {"error": "401::"})
+        super_subscribe.side_effect = [error, None]
+
+        with self.assertRaises(ServerError):
+            await self.client.subscribe(channel)
+
+        super_subscribe.assert_called_with(channel)
+        self.assertIsNone(self.client.replay_storage.replay_fallback)
 
 
 class TestCreateReplayStorage(TestCase):

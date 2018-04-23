@@ -20,6 +20,9 @@ ReplayMarker = namedtuple("ReplayMarker", "date, replay_id")
 
 class ReplayMarkerStorage(Extension):
     """Abstract base class for replay marker storage implementations"""
+    def __init__(self):
+        super().__init__()
+        self.replay_fallback = None
 
     async def incoming(self, payload, headers=None):
         for message in payload:
@@ -45,8 +48,14 @@ class ReplayMarkerStorage(Extension):
         # to
         subscription = message["subscription"]
 
-        # get the stored replay id
-        replay_id = await self.get_replay_id(subscription)
+        # if there is a replay fallback set, then it must be used as the replay
+        # id in order to successfully subscribe
+        if self.replay_fallback:
+            replay_id = self.replay_fallback
+            self.replay_fallback = None
+        # otherwise get the stored replay id
+        else:
+            replay_id = await self.get_replay_id(subscription)
 
         # if the replay id is None, then we do not yet have a replay id for the
         # given subscription, so don't add anything to the message
@@ -121,6 +130,7 @@ class MappingStorage(ReplayMarkerStorage):
         if not isinstance(mapping, abc.MutableMapping):
             raise TypeError("mapping parameter should be an instance of "
                             "MutableMapping.")
+        super().__init__()
         self.mapping = mapping
 
     async def set_replay_marker(self, subscription, replay_marker):

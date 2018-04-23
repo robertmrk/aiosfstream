@@ -20,6 +20,9 @@ class TestReplayStorage(TestCase):
     def setUp(self):
         self.replay_storage = ReplayMarkerStorageStub()
 
+    def test_init(self):
+        self.assertIsNone(self.replay_storage.replay_fallback)
+
     async def test_incoming_with_meta_channel(self):
         self.replay_storage.extract_replay_id = mock.CoroutineMock()
         message = {
@@ -100,6 +103,22 @@ class TestReplayStorage(TestCase):
                          replay_id)
         self.replay_storage.get_replay_id.assert_called_with(
             message["subscription"])
+
+    async def test_insert_replay_id_with_replay_fallback(self):
+        fallback_id = "id"
+        self.replay_storage.get_replay_id = mock.CoroutineMock()
+        self.replay_storage.replay_fallback = fallback_id
+        message = {
+            "channel": MetaChannel.SUBSCRIBE,
+            "subscription": "/foo/bar",
+            "ext": {}
+        }
+
+        await self.replay_storage.insert_replay_id(message)
+
+        self.assertEqual(message["ext"]["replay"][message["subscription"]],
+                         fallback_id)
+        self.replay_storage.get_replay_id.assert_not_called()
 
     async def test_insert_replay_id_inserts_ext(self):
         replay_id = "id"

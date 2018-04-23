@@ -1,7 +1,9 @@
 """Client class implementation"""
 from collections import abc
+from http import HTTPStatus
 
 from aiocometd import Client as CometdClient
+from aiocometd.exceptions import ServerError
 
 from .auth import AuthenticatorBase
 from .replay import ReplayOption, ReplayMarkerStorage, MappingStorage, \
@@ -15,7 +17,8 @@ API_VERSION = "42.0"
 class Client(CometdClient):
     """Salesforce Streaming API client"""
     def __init__(self, authenticator, *, replay=ReplayOption.NEW_EVENTS,
-                 connection_timeout=10.0, max_pending_count=100, loop=None):
+                 replay_fallback=None, connection_timeout=10.0,
+                 max_pending_count=100, loop=None):
         """
         :param authenticator: An authenticator object
         :type authenticator: aiosfstream.auth.AuthenticatorBase
@@ -27,6 +30,9 @@ class Client(CometdClient):
         :obj:`replay.ReplayMarkerStorage` implementation.
         :type replay: replay.ReplayOption, replay.ReplayMarkerStorage, \
         collections.abc.MutableMapping or None
+        :param replay_fallback: Replay fallback policy, for when a subscribe \
+        operation fails because of a way too old replay id
+        :type replay: replay.ReplayOption
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
@@ -45,10 +51,12 @@ class Client(CometdClient):
             raise ValueError(f"authenticator should be an instance of "
                              f"{AuthenticatorBase.__name__}.")
 
+        self.replay_fallback = replay_fallback
+
         extensions = None
-        replay_extension = self.create_replay_storage(replay)
-        if replay_extension:
-            extensions = [replay_extension]
+        self.replay_storage = self.create_replay_storage(replay)
+        if self.replay_storage:
+            extensions = [self.replay_storage]
 
         # set authenticator as the auth extension
         super().__init__("",
@@ -77,6 +85,17 @@ class Client(CometdClient):
         self.url = self.get_cometd_url(self.auth.instance_url)
         # open the CometD client
         await super().open()
+
+    async def subscribe(self, channel):
+        try:
+            await super().subscribe(channel)
+        except ServerError as error:
+            if (self.replay_fallback and self.replay_storage and
+                    error.error_code == HTTPStatus.BAD_REQUEST):
+                self.replay_storage.replay_fallback = self.replay_fallback
+                await super().subscribe(channel)
+            else:
+                raise
 
     @staticmethod
     def create_replay_storage(replay_param):
