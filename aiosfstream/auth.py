@@ -42,13 +42,11 @@ class AuthenticatorBase(AuthExtension):
         request or if a network failure occurs
         """
         try:
-            response = await self._authenticate()
+            status_code, response_data = await self._authenticate()
         except ClientError as error:
             raise AuthenticationError("Network request failed") from error
 
-        response_data = await response.json()
-
-        if response.status != HTTPStatus.OK:
+        if status_code != HTTPStatus.OK:
             self._auth_response = None
             self._auth_header = None
             raise AuthenticationError("Authentication failed", response_data)
@@ -61,8 +59,8 @@ class AuthenticatorBase(AuthExtension):
     async def _authenticate(self):
         """Authenticate the user
 
-        :return: The server's response
-        :rtype: aiohttp.ClientResponse
+        :return: The status code and response data from the server's response
+        :rtype: tuple(int, dict)
         :raise aiohttp.client_exceptions.ClientError: If a network failure \
         occurs
         """
@@ -98,7 +96,9 @@ class PasswordAuthenticator(AuthenticatorBase):
                 "username": self.username,
                 "password": self.password
             }
-            return await session.post(TOKEN_URL, data=data)
+            response = await session.post(TOKEN_URL, data=data)
+            response_data = await response.json()
+            return response.status, response_data
 
 
 class RefreshTokenAuthenticator(AuthenticatorBase):
@@ -129,4 +129,6 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
                 "client_secret": self.client_secret,
                 "refresh_token": self.refresh_token
             }
-            return await session.post(TOKEN_URL, data=data)
+            response = await session.post(TOKEN_URL, data=data)
+            response_data = await response.json()
+            return response.status, response_data

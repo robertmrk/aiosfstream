@@ -48,11 +48,9 @@ class TestAuthenticatorBase(TestCase):
             "token_type": "type",
             "access_token": "token"
         }
-        response_obj = mock.MagicMock()
-        response_obj.status = HTTPStatus.OK
-        response_obj.json = mock.CoroutineMock(return_value=response)
+        status = HTTPStatus.OK
         self.authenticator._authenticate = mock.CoroutineMock(
-            return_value=response_obj
+            return_value=(status, response)
         )
 
         await self.authenticator.authenticate()
@@ -68,11 +66,9 @@ class TestAuthenticatorBase(TestCase):
             "token_type": "type",
             "access_token": "token"
         }
-        response_obj = mock.MagicMock()
-        response_obj.status = HTTPStatus.BAD_REQUEST
-        response_obj.json = mock.CoroutineMock(return_value=response)
+        status = HTTPStatus.BAD_REQUEST
         self.authenticator._authenticate = mock.CoroutineMock(
-            return_value=response_obj
+            return_value=(status, response)
         )
 
         with self.assertRaisesRegex(AuthenticationError,
@@ -113,7 +109,11 @@ class TestPasswordAuthenticator(TestCase):
 
     @mock.patch("aiosfstream.auth.ClientSession")
     async def test_authenticate(self, session_cls):
+        status = object()
+        response_data = object()
         response_obj = mock.MagicMock()
+        response_obj.json = mock.CoroutineMock(return_value=response_data)
+        response_obj.status = status
         session = mock.MagicMock()
         session.__aenter__ = mock.CoroutineMock(return_value=session)
         session.__aexit__ = mock.CoroutineMock()
@@ -129,7 +129,7 @@ class TestPasswordAuthenticator(TestCase):
 
         result = await self.authenticator._authenticate()
 
-        self.assertEqual(result, response_obj)
+        self.assertEqual(result, (status, response_data))
         session.post.assert_called_with(TOKEN_URL, data=expected_data)
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
@@ -145,7 +145,11 @@ class TestRefreshTokenAuthenticator(TestCase):
 
     @mock.patch("aiosfstream.auth.ClientSession")
     async def test_authenticate(self, session_cls):
+        status = object()
+        response_data = object()
         response_obj = mock.MagicMock()
+        response_obj.json = mock.CoroutineMock(return_value=response_data)
+        response_obj.status = status
         session = mock.MagicMock()
         session.__aenter__ = mock.CoroutineMock(return_value=session)
         session.__aexit__ = mock.CoroutineMock()
@@ -160,7 +164,7 @@ class TestRefreshTokenAuthenticator(TestCase):
 
         result = await self.authenticator._authenticate()
 
-        self.assertEqual(result, response_obj)
+        self.assertEqual(result, (status, response_data))
         session.post.assert_called_with(TOKEN_URL, data=expected_data)
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
