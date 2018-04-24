@@ -37,24 +37,24 @@ Authenticators
 Replay
 ------
 
-.. autoclass:: aiosfstream.ReplayOption
+.. autoclass:: ReplayOption
     :members:
     :undoc-members:
 
-.. autoclass:: aiosfstream.ReplayMarker
+.. autoclass:: ReplayMarker
     :members:
     :show-inheritance:
 
-.. autoclass:: aiosfstream.ReplayMarkerStorage
+.. autoclass:: ReplayMarkerStorage
 
     .. autocomethod:: get_replay_marker
     .. autocomethod:: set_replay_marker
 
-.. autoclass:: aiosfstream.MappingStorage
+.. autoclass:: MappingStorage
 
-.. autoclass:: aiosfstream.DefaultMappingStorage
+.. autoclass:: DefaultMappingStorage
 
-.. autoclass:: aiosfstream.ConstantReplayId
+.. autoclass:: ConstantReplayId
 
 Exceptions
 ----------
@@ -63,31 +63,31 @@ Exceptions
 
 .. py:currentmodule:: aiosfstream.exceptions
 
-.. autoclass:: AiosfstreamException
+.. autoexception:: AiosfstreamException
     :members:
 
-.. autoclass:: AuthenticationError
+.. autoexception:: AuthenticationError
     :members:
 
-.. autoclass:: ClientError
+.. autoexception:: ClientError
     :members:
 
-.. autoclass:: ClientInvalidOperation
+.. autoexception:: ClientInvalidOperation
     :members:
 
-.. autoclass:: TransportError
+.. autoexception:: TransportError
     :members:
 
-.. autoclass:: TransportInvalidOperation
+.. autoexception:: TransportInvalidOperation
     :members:
 
-.. autoclass:: TransportTimeoutError
+.. autoexception:: TransportTimeoutError
     :members:
 
-.. autoclass:: TransportConnectionClosed
+.. autoexception:: TransportConnectionClosed
     :members:
 
-.. autoclass:: ServerError
+.. autoexception:: ServerError
     :members:
 
     .. autoattribute:: message

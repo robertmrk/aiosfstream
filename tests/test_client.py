@@ -155,7 +155,6 @@ class TestClient(TestCase):
                           "retrying subscription with {!r}."
                           .format("server_message",
                                   self.client.replay_fallback)])
-        
 
     @mock.patch("aiosfstream.client.CometdClient.subscribe")
     async def test_subscribe_error_without_fallback_and_storage(
