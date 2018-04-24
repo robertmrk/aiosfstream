@@ -67,12 +67,29 @@ class TestTranslateError(TestCase):
 
         self.assertIs(result, return_value)
 
+    async def test_async_returns_result_on_no_error(self):
+        return_value = object()
+
+        async def func():
+            return return_value
+
+        result = await exc.translate_errors(func)()
+
+        self.assertIs(result, return_value)
+
     def test_reraises_non_cometd_error(self):
         def raise_error():
             raise ValueError()
 
         with self.assertRaises(ValueError):
             exc.translate_errors(raise_error)()
+
+    async def test_async_reraises_non_cometd_error(self):
+        async def raise_error():
+            raise ValueError()
+
+        with self.assertRaises(ValueError):
+            await exc.translate_errors(raise_error)()
 
     def test_translates_cometd_error(self):
         response = {
@@ -85,5 +102,19 @@ class TestTranslateError(TestCase):
 
         with self.assertRaises(exc.ServerError) as cm:
             exc.translate_errors(raise_error)()
+
+        self.assertEqual(cm.exception.args, error.args)
+
+    async def test_async_translates_cometd_error(self):
+        response = {
+            "error": "400:arg1,arg2:description"
+        }
+        error = cometd_exc.ServerError("Message", response)
+
+        async def raise_error():
+            raise error
+
+        with self.assertRaises(exc.ServerError) as cm:
+            await exc.translate_errors(raise_error)()
 
         self.assertEqual(cm.exception.args, error.args)

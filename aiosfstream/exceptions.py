@@ -13,6 +13,7 @@ Exception hierarchy::
         ServerError
 """
 from functools import wraps
+import asyncio
 
 import aiocometd.exceptions as cometd_exc
 
@@ -89,8 +90,8 @@ EXCEPTION_PAIRS = {
 
 
 def translate_errors(func):
-    """Function decorator for translating the raised aiocometd errors to \
-    their aiosfstream counterparts
+    """Function decorator for translating the raised aiocometd \
+    errors to their aiosfstream counterparts
 
     As every properly behaving library, aiosfstream uses its own exception
     hierarchy, just as aiocometd does. The problem is that for the users of
@@ -105,6 +106,16 @@ def translate_errors(func):
     :return: The function wrapper
     """
     @wraps(func)
+    async def async_wrapper(*args, **kwargs):  # pylint: disable=missing-docstring
+        try:
+            return await func(*args, **kwargs)
+        except cometd_exc.AiocometdException as cometd_error:
+            error_cls = EXCEPTION_PAIRS[type(cometd_error)]
+            raise error_cls(*cometd_error.args) from cometd_error
+        except Exception:
+            raise
+
+    @wraps(func)
     def wrapper(*args, **kwargs):  # pylint: disable=missing-docstring
         try:
             return func(*args, **kwargs)
@@ -114,4 +125,6 @@ def translate_errors(func):
         except Exception:
             raise
 
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
     return wrapper

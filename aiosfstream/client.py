@@ -8,6 +8,7 @@ from aiocometd.exceptions import ServerError
 from .auth import AuthenticatorBase
 from .replay import ReplayOption, ReplayMarkerStorage, MappingStorage, \
     ConstantReplayId
+from .exceptions import translate_errors
 
 
 COMETD_PATH = "cometd"
@@ -16,6 +17,7 @@ API_VERSION = "42.0"
 
 class Client(CometdClient):
     """Salesforce Streaming API client"""
+    @translate_errors
     def __init__(self, authenticator, *, replay=ReplayOption.NEW_EVENTS,
                  replay_fallback=None, connection_timeout=10.0,
                  max_pending_count=100, loop=None):
@@ -66,6 +68,7 @@ class Client(CometdClient):
                          max_pending_count=max_pending_count,
                          loop=loop)
 
+    @translate_errors
     async def open(self):
         """Establish a connection with the Streaming API endpoint
 
@@ -86,6 +89,7 @@ class Client(CometdClient):
         # open the CometD client
         await super().open()
 
+    @translate_errors
     async def subscribe(self, channel):
         try:
             await super().subscribe(channel)
@@ -96,6 +100,30 @@ class Client(CometdClient):
                 await super().subscribe(channel)
             else:
                 raise
+
+    @translate_errors
+    async def unsubscribe(self, channel):
+        await super().unsubscribe(channel)
+
+    @translate_errors
+    async def publish(self, channel, data):
+        return await super().publish(channel, data)
+
+    @translate_errors
+    async def receive(self):
+        return await super().receive()
+
+    @translate_errors
+    async def __aiter__(self):
+        return super().__aiter__()
+
+    @translate_errors
+    async def __aenter__(self):
+        return await super().__aenter__()
+
+    @translate_errors
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return await super().__aexit__(exc_type, exc_val, exc_tb)
 
     @staticmethod
     def create_replay_storage(replay_param):
