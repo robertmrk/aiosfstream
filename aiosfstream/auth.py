@@ -68,20 +68,20 @@ class AuthenticatorBase(AuthExtension):
 
 class PasswordAuthenticator(AuthenticatorBase):
     """Authenticator for using the OAuth 2.0 Username-Password Flow"""
-    def __init__(self, client_id, client_secret, username, password):
+    def __init__(self, consumer_key, consumer_secret, username, password):
         """
-        :param str client_id: Consumer key from the Salesforce connected app \
-        definition
-        :param str client_secret: Consumer secret from the Salesforce \
+        :param str consumer_key: Consumer key from the Salesforce connected \
+        app definition
+        :param str consumer_secret: Consumer secret from the Salesforce \
         connected app definition
         :param str username: User's username
         :param str password: User's password
         """
         super().__init__()
         #: OAuth2 client id
-        self.client_id = client_id
+        self.client_id = consumer_key
         #: OAuth2 client secret
-        self.client_secret = client_secret
+        self.client_secret = consumer_secret
         #: Salesforce username
         self.username = username
         #: Salesforce password
@@ -103,11 +103,11 @@ class PasswordAuthenticator(AuthenticatorBase):
 
 class RefreshTokenAuthenticator(AuthenticatorBase):
     """Authenticator for using the OAuth 2.0 Refresh Token Flow"""
-    def __init__(self, client_id, client_secret, refresh_token):
+    def __init__(self, consumer_key, consumer_secret, refresh_token):
         """
-        :param str client_id: Consumer key from the Salesforce connected app \
-        definition
-        :param str client_secret: Consumer secret from the Salesforce \
+        :param str consumer_key: Consumer key from the Salesforce connected \
+        app definition
+        :param str consumer_secret: Consumer secret from the Salesforce \
         connected app definition
         :param str refresh_token: A refresh token obtained from Salesforce \
         by using one of its authentication methods (for example with the
@@ -115,9 +115,9 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
         """
         super().__init__()
         #: OAuth2 client id
-        self.client_id = client_id
+        self.client_id = consumer_key
         #: OAuth2 client secret
-        self.client_secret = client_secret
+        self.client_secret = consumer_secret
         #: Salesforce refresh token
         self.refresh_token = refresh_token
 

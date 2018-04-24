@@ -102,8 +102,8 @@ class TestAuthenticatorBase(TestCase):
 
 class TestPasswordAuthenticator(TestCase):
     def setUp(self):
-        self.authenticator = PasswordAuthenticator(client_id="id",
-                                                   client_secret="secret",
+        self.authenticator = PasswordAuthenticator(consumer_key="id",
+                                                   consumer_secret="secret",
                                                    username="username",
                                                    password="password")
 
@@ -138,8 +138,8 @@ class TestPasswordAuthenticator(TestCase):
 class TestRefreshTokenAuthenticator(TestCase):
     def setUp(self):
         self.authenticator = RefreshTokenAuthenticator(
-            client_id="id",
-            client_secret="secret",
+            consumer_key="id",
+            consumer_secret="secret",
             refresh_token="refresh_token"
         )
 
