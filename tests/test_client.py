@@ -47,16 +47,24 @@ class TestClient(TestCase):
         with self.assertRaises(AiosfstreamException):
             Client(self.authenticator)
 
-    def test_init_vefiries_authenticator(self):
+    def test_init_verifies_authenticator(self):
         with self.assertRaisesRegex(TypeError,
                                     f"authenticator should be an instance of "
                                     f"{AuthenticatorBase.__name__}."):
             Client(object())
 
+    def test_init_verifies_replay(self):
+        with self.assertRaisesRegex(TypeError,
+                                    "'str' is not a valid type for the replay "
+                                    "parameter."):
+            Client(self.authenticator, replay="fake")
+
     @mock.patch("aiosfstream.client.Client.create_replay_storage")
     def test_init_creates_replay_storage(self, create_replay_storage):
         replay_param = object()
-        create_replay_storage.return_value = object()
+        create_replay_storage.return_value = mock.create_autospec(
+            ReplayMarkerStorage
+        )()
 
         client = Client(self.authenticator,
                         replay=replay_param)
@@ -66,20 +74,6 @@ class TestClient(TestCase):
                          [create_replay_storage.return_value])
         self.assertEqual(client.replay_storage,
                          create_replay_storage.return_value)
-        self.assertIsNone(client.replay_fallback)
-        create_replay_storage.assert_called_with(replay_param)
-
-    @mock.patch("aiosfstream.client.Client.create_replay_storage")
-    def test_init_none_replay_storage(self, create_replay_storage):
-        replay_param = object()
-        create_replay_storage.return_value = None
-
-        client = Client(self.authenticator,
-                        replay=replay_param)
-
-        self.assertEqual(client.auth, self.authenticator)
-        self.assertIsNone(client.extensions)
-        self.assertIsNone(client.replay_storage)
         self.assertIsNone(client.replay_fallback)
         create_replay_storage.assert_called_with(replay_param)
 

@@ -55,15 +55,15 @@ class Client(CometdClient):
 
         self.replay_fallback = replay_fallback
 
-        extensions = None
         self.replay_storage = self.create_replay_storage(replay)
-        if self.replay_storage:
-            extensions = [self.replay_storage]
+        if not isinstance(self.replay_storage, ReplayMarkerStorage):
+            raise TypeError("{!r} is not a valid type for the replay "
+                            "parameter.".format(type(replay).__name__))
 
         # set authenticator as the auth extension
         super().__init__("",
                          auth=authenticator,
-                         extensions=extensions,
+                         extensions=[self.replay_storage],
                          connection_timeout=connection_timeout,
                          max_pending_count=max_pending_count,
                          loop=loop)
