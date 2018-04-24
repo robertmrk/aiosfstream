@@ -58,5 +58,39 @@ Exceptions
 ----------
 
 .. automodule:: aiosfstream.exceptions
+
+.. py:currentmodule:: aiosfstream.exceptions
+
+.. autoclass:: AiosfstreamException
     :members:
-    :undoc-members:
+
+.. autoclass:: AuthenticationError
+    :members:
+
+.. autoclass:: ClientError
+    :members:
+
+.. autoclass:: ClientInvalidOperation
+    :members:
+
+.. autoclass:: TransportError
+    :members:
+
+.. autoclass:: TransportInvalidOperation
+    :members:
+
+.. autoclass:: TransportTimeoutError
+    :members:
+
+.. autoclass:: TransportConnectionClosed
+    :members:
+
+.. autoclass:: ServerError
+    :members:
+
+    .. autoattribute:: message
+    .. autoattribute:: response
+    .. autoattribute:: error
+    .. autoattribute:: error_code
+    .. autoattribute:: error_args
+    .. autoattribute:: error_message

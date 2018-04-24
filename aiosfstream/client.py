@@ -35,8 +35,9 @@ class Client(CometdClient):
         :type replay: ~replay.ReplayOption, ~replay.ReplayMarkerStorage, \
         collections.abc.MutableMapping or None
         :param replay_fallback: Replay fallback policy, for when a subscribe \
-        operation fails because of a way too old replay id
-        :type replay_fallback: replay.ReplayOption
+        operation fails because a replay id was specified for a message \
+        outside the retention window
+        :type replay_fallback: ~replay.ReplayOption
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
