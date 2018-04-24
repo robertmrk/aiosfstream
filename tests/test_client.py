@@ -47,7 +47,7 @@ class TestClient(TestCase):
             Client(self.authenticator)
 
     def test_init_vefiries_authenticator(self):
-        with self.assertRaisesRegex(ValueError,
+        with self.assertRaisesRegex(TypeError,
                                     f"authenticator should be an instance of "
                                     f"{AuthenticatorBase.__name__}."):
             Client(object())

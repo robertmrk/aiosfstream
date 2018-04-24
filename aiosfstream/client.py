@@ -50,8 +50,8 @@ class Client(CometdClient):
                      event loop.
         """
         if not isinstance(authenticator, AuthenticatorBase):
-            raise ValueError(f"authenticator should be an instance of "
-                             f"{AuthenticatorBase.__name__}.")
+            raise TypeError(f"authenticator should be an instance of "
+                            f"{AuthenticatorBase.__name__}.")
 
         self.replay_fallback = replay_fallback
 
