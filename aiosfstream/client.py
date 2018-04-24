@@ -1,6 +1,7 @@
 """Client class implementation"""
 from collections import abc
 from http import HTTPStatus
+import logging
 
 from aiocometd import Client as CometdClient
 from aiocometd.exceptions import ServerError
@@ -13,6 +14,7 @@ from .exceptions import translate_errors
 
 COMETD_PATH = "cometd"
 API_VERSION = "42.0"
+LOGGER = logging.getLogger(__name__)
 
 
 class Client(CometdClient):
@@ -60,6 +62,10 @@ class Client(CometdClient):
             raise TypeError("{!r} is not a valid type for the replay "
                             "parameter.".format(type(replay).__name__))
 
+        LOGGER.debug("Client created with replay storage: %r, "
+                     "replay fallback: %r",
+                     self.replay_storage,
+                     self.replay_fallback)
         # set authenticator as the auth extension
         super().__init__("",
                          auth=authenticator,
@@ -83,7 +89,10 @@ class Client(CometdClient):
         request or if a network failure occurs during the authentication
         """
         # authenticate
+        LOGGER.debug("Authenticating using %r.", self.auth)
         await self.auth.authenticate()
+        LOGGER.info("Successful authentication. Instance URL: %r.",
+                    self.auth.instance_url)
         # construct the URL of the CometD endpoint using the instance URL
         self.url = self.get_cometd_url(self.auth.instance_url)
         # open the CometD client
@@ -100,6 +109,10 @@ class Client(CometdClient):
         except ServerError as error:
             if (self.replay_fallback and self.replay_storage and
                     error.error_code == HTTPStatus.BAD_REQUEST):
+                LOGGER.warning("Subscription failed with message: %r, "
+                               "retrying subscription with %r.",
+                               error.error_message,
+                               self.replay_fallback)
                 self.replay_storage.replay_fallback = self.replay_fallback
                 await super().subscribe(channel)
             else:

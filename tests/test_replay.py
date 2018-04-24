@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import reprlib
 
 from asynctest import TestCase, mock
 from aiocometd.constants import MetaChannel
@@ -278,6 +279,16 @@ class TestMappingReplayStorage(TestCase):
         self.assertIsNone(result)
         self.storage.mapping.__getitem__.assert_called_with(subscription)
 
+    def test_repr(self):
+        result = repr(self.storage)
+
+        cls_name = type(self.storage).__name__
+        storage = self.storage
+        self.assertEqual(
+            result,
+            f"{cls_name}(mapping={reprlib.repr(storage.mapping)})"
+        )
+
 
 class TestConstantReplayId(TestCase):
     def setUp(self):
@@ -296,6 +307,16 @@ class TestConstantReplayId(TestCase):
     async def test_set_replay_marker(self):
         marker = ReplayMarker(date="", replay_id="id")
         await self.replay_storage.set_replay_marker("subscription", marker)
+
+    def test_repr(self):
+        result = repr(self.replay_storage)
+
+        cls_name = type(self.replay_storage).__name__
+        storage = self.replay_storage
+        self.assertEqual(
+            result,
+            f"{cls_name}(default_id={reprlib.repr(storage.default_id)})"
+        )
 
 
 class TestDefaultReplayIdMixin(TestCase):
@@ -336,3 +357,14 @@ class TestDefaultMappingReplayStorage(TestDefaultReplayIdMixin,
     def test_init(self):
         self.assertIs(self.storage.mapping, self.mapping)
         self.assertIs(self.storage.default_id, self.replay_id)
+
+    def test_repr(self):
+        result = repr(self.storage)
+
+        cls_name = type(self.storage).__name__
+        storage = self.storage
+        self.assertEqual(
+            result,
+            f"{cls_name}(mapping={reprlib.repr(storage.mapping)}, "
+            f"default_id={reprlib.repr(storage.default_id)})"
+        )

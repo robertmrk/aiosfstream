@@ -29,16 +29,24 @@ class TestClient(TestCase):
         connection_timeout = 20
         max_pending_count = 1
         loop = object()
-        client = Client(self.authenticator,
-                        connection_timeout=connection_timeout,
-                        max_pending_count=max_pending_count,
-                        loop=loop)
+
+        with self.assertLogs("aiosfstream.client", "DEBUG") as log:
+            client = Client(self.authenticator,
+                            connection_timeout=connection_timeout,
+                            max_pending_count=max_pending_count,
+                            loop=loop)
 
         self.assertEqual(client.url, "")
         self.assertEqual(client.auth, self.authenticator)
         self.assertEqual(client.connection_timeout, connection_timeout)
         self.assertEqual(client._max_pending_count, max_pending_count)
         self.assertEqual(client._loop, loop)
+        self.assertEqual(log.output,
+                         ["DEBUG:aiosfstream.client:"
+                          "Client created with replay storage: {!r}, "
+                          "replay fallback: {!r}"
+                          .format(client.replay_storage,
+                                  client.replay_fallback)])
 
     @mock.patch("aiosfstream.client.CometdClient.__init__")
     def test_init_translates_errors(self, super_init):
@@ -82,11 +90,19 @@ class TestClient(TestCase):
     async def test_open(self, get_cometd_url, super_open):
         get_cometd_url.return_value = "url"
 
-        await self.client.open()
+        with self.assertLogs("aiosfstream.client", "DEBUG") as log:
+            await self.client.open()
 
         self.authenticator.authenticate.assert_called()
         self.assertEqual(self.client.url, get_cometd_url.return_value)
         super_open.assert_called()
+        self.assertEqual(log.output,
+                         ["DEBUG:aiosfstream.client:"
+                          "Authenticating using {!r}."
+                          .format(self.client.auth),
+                          "INFO:aiosfstream.client:"
+                          "Successful authentication. Instance URL: {!r}."
+                          .format(self.client.auth.instance_url)])
 
     @mock.patch("aiosfstream.client.CometdClient.open")
     @mock.patch("aiosfstream.client.Client.get_cometd_url")
@@ -124,14 +140,21 @@ class TestClient(TestCase):
         channel = "/foo/bar"
         self.client.replay_fallback = object()
         self.client.replay_storage = mock.MagicMock()
-        error = ServerError("message", {"error": "400::"})
+        error = ServerError("message", {"error": "400::server_message"})
         super_subscribe.side_effect = [error, None]
 
-        await self.client.subscribe(channel)
+        with self.assertLogs("aiosfstream.client", "WARNING") as log:
+            await self.client.subscribe(channel)
 
         super_subscribe.assert_has_calls([mock.call(channel)] * 2)
         self.assertEqual(self.client.replay_storage.replay_fallback,
                          self.client.replay_fallback)
+        self.assertEqual(log.output,
+                         ["WARNING:aiosfstream.client:"
+                          "Subscription failed with message: {!r}, "
+                          "retrying subscription with {!r}."
+                          .format("server_message",
+                                  self.client.replay_fallback)])
 
     @mock.patch("aiosfstream.client.CometdClient.subscribe")
     async def test_subscribe_error_without_fallback_and_storage(

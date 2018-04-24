@@ -1,6 +1,7 @@
 """Authenticatior class implementations"""
 from abc import abstractmethod
 from http import HTTPStatus
+import reprlib
 
 from aiocometd import AuthExtension
 from aiohttp import ClientSession
@@ -87,6 +88,14 @@ class PasswordAuthenticator(AuthenticatorBase):
         #: Salesforce password
         self.password = password
 
+    def __repr__(self):
+        """Formal string representation"""
+        cls_name = type(self).__name__
+        return f"{cls_name}(consumer_key={reprlib.repr(self.client_id)}," \
+               f"consumer_secret={reprlib.repr(self.client_secret)}, " \
+               f"username={reprlib.repr(self.username)}, " \
+               f"password={reprlib.repr(self.password)})"
+
     async def _authenticate(self):
         async with ClientSession() as session:
             data = {
@@ -120,6 +129,13 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
         self.client_secret = consumer_secret
         #: Salesforce refresh token
         self.refresh_token = refresh_token
+
+    def __repr__(self):
+        """Formal string representation"""
+        cls_name = type(self).__name__
+        return f"{cls_name}(consumer_key={reprlib.repr(self.client_id)}," \
+               f"consumer_secret={reprlib.repr(self.client_secret)}, " \
+               f"refresh_token={reprlib.repr(self.refresh_token)})"
 
     async def _authenticate(self):
         async with ClientSession() as session:

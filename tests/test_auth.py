@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import reprlib
 
 from asynctest import TestCase, mock
 from aiohttp.client_exceptions import ClientError
@@ -134,6 +135,19 @@ class TestPasswordAuthenticator(TestCase):
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
 
+    def test_repr(self):
+        result = repr(self.authenticator)
+
+        cls_name = type(self.authenticator).__name__
+        auth = self.authenticator
+        self.assertEqual(
+            result,
+            f"{cls_name}(consumer_key={reprlib.repr(auth.client_id)},"
+            f"consumer_secret={reprlib.repr(auth.client_secret)}, "
+            f"username={reprlib.repr(auth.username)}, "
+            f"password={reprlib.repr(auth.password)})"
+        )
+
 
 class TestRefreshTokenAuthenticator(TestCase):
     def setUp(self):
@@ -168,3 +182,15 @@ class TestRefreshTokenAuthenticator(TestCase):
         session.post.assert_called_with(TOKEN_URL, data=expected_data)
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
+
+    def test_repr(self):
+        result = repr(self.authenticator)
+
+        cls_name = type(self.authenticator).__name__
+        auth = self.authenticator
+        self.assertEqual(
+            result,
+            f"{cls_name}(consumer_key={reprlib.repr(auth.client_id)},"
+            f"consumer_secret={reprlib.repr(auth.client_secret)}, "
+            f"refresh_token={reprlib.repr(auth.refresh_token)})"
+        )

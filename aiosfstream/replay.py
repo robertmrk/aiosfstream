@@ -2,6 +2,7 @@
 from collections import namedtuple, abc
 from abc import abstractmethod
 from enum import IntEnum, unique
+import reprlib
 
 from aiocometd import Extension
 from aiocometd.constants import META_CHANNEL_PREFIX, MetaChannel
@@ -136,6 +137,11 @@ class MappingStorage(ReplayMarkerStorage):
         super().__init__()
         self.mapping = mapping
 
+    def __repr__(self):
+        """Formal string representation"""
+        cls_name = type(self).__name__
+        return f"{cls_name}(mapping={reprlib.repr(self.mapping)})"
+
     async def set_replay_marker(self, subscription, replay_marker):
         self.mapping[subscription] = replay_marker
 
@@ -179,6 +185,11 @@ class ConstantReplayId(DefaultReplayIdMixin, ReplayMarkerStorage):
         This implementations doesn't actually stores anything for later
         retrieval. Calls to :meth:`set_replay_marker` are ignored.
     """
+    def __repr__(self):
+        """Formal string representation"""
+        cls_name = type(self).__name__
+        return f"{cls_name}(default_id={reprlib.repr(self.default_id)})"
+
     async def set_replay_marker(self, subscription, replay_marker):
         pass
 
@@ -196,3 +207,9 @@ class DefaultMappingStorage(DefaultReplayIdMixin, MappingStorage):
          :param int default_id: A replay id
         """
         super().__init__(mapping=mapping, default_id=default_id)
+
+    def __repr__(self):
+        """Formal string representation"""
+        cls_name = type(self).__name__
+        return f"{cls_name}(mapping={reprlib.repr(self.mapping)}, " \
+               f"default_id={reprlib.repr(self.default_id)})"
