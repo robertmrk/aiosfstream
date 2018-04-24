@@ -5,7 +5,7 @@ from http import HTTPStatus
 from aiocometd import Client as CometdClient
 from aiocometd.exceptions import ServerError
 
-from .auth import AuthenticatorBase
+from .auth import AuthenticatorBase, PasswordAuthenticator
 from .replay import ReplayOption, ReplayMarkerStorage, MappingStorage, \
     ConstantReplayId
 from .exceptions import translate_errors
@@ -158,3 +158,64 @@ class Client(CometdClient):
         :rtype: str
         """
         return "/".join((instance_url, COMETD_PATH, API_VERSION))
+
+
+class SalesforceStreamingClient(Client):
+    """Salesforce Streaming API client with username/password authentication
+
+    This is a convenience class which is suitable for the most common use case.
+    To use a different authentication method, use the general :obj:`Client`
+    class with a different
+    :obj:`Authenticator <aiosfstream.auth.AuthenticatorBase>`
+    """
+    def __init__(self, *,
+                 consumer_key, consumer_secret, username, password,
+                 replay=ReplayOption.NEW_EVENTS,
+                 replay_fallback=None, connection_timeout=10.0,
+                 max_pending_count=100, loop=None):
+        """
+        :param str consumer_key: Consumer key from the Salesforce connected \
+        app definition
+        :param str consumer_secret: Consumer secret from the Salesforce \
+        connected app definition
+        :param str username: User's username
+        :param str password: User's password
+        :param replay: A ReplayOption or ann object capable of storing replay \
+        ids if you want to take advantage of Salesforce's replay extension. \
+        You can use one of the available :obj:`~replay.ReplayOption`s, or an \
+        object that supports the MutableMapping protocol like :obj:`dict` or \
+        :obj:`defaultdict`, :obj:`shelve.Shelf` etc., or a custom \
+        :obj:`replay.ReplayMarkerStorage` implementation.
+        :type replay: replay.ReplayOption, replay.ReplayMarkerStorage, \
+        collections.abc.MutableMapping or None
+        :param replay_fallback: Replay fallback policy, for when a subscribe \
+        operation fails because of a way too old replay id
+        :type replay_fallback: replay.ReplayOption
+        :param connection_timeout: The maximum amount of time to wait for the \
+        transport to re-establish a connection with the server when the \
+        connection fails.
+        :type connection_timeout: int, float or None
+        :param int max_pending_count: The maximum number of messages to \
+        prefetch from the server. If the number of prefetched messages reach \
+        this size then the connection will be suspended, until messages are \
+        consumed. \
+        If it is less than or equal to zero, the count is infinite.
+        :param loop: Event :obj:`loop <asyncio.BaseEventLoop>` used to
+                     schedule tasks. If *loop* is ``None`` then
+                     :func:`asyncio.get_event_loop` is used to get the default
+                     event loop.
+        """
+        authenticator = PasswordAuthenticator(
+            consumer_key=consumer_key,
+            consumer_secret=consumer_secret,
+            username=username,
+            password=password
+        )
+        super().__init__(
+            authenticator,
+            replay=replay,
+            replay_fallback=replay_fallback,
+            connection_timeout=connection_timeout,
+            max_pending_count=max_pending_count,
+            loop=loop
+        )

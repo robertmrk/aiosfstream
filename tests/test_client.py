@@ -2,7 +2,8 @@ from asynctest import TestCase, mock
 
 from aiocometd.exceptions import ServerError, AiocometdException
 
-from aiosfstream.client import Client, COMETD_PATH, API_VERSION
+from aiosfstream.client import Client, COMETD_PATH, API_VERSION, \
+    SalesforceStreamingClient
 from aiosfstream.auth import AuthenticatorBase
 from aiosfstream.replay import ReplayMarkerStorage, MappingStorage, \
     ConstantReplayId, ReplayOption
@@ -339,3 +340,45 @@ class TestCreateReplayStorage(TestCase):
         result = Client.create_replay_storage(replay)
 
         self.assertIsNone(result)
+
+
+class TestSalesforceStreamingClient(TestCase):
+    @mock.patch("aiosfstream.client.PasswordAuthenticator")
+    @mock.patch("aiosfstream.client.Client.__init__")
+    def test_init(self, super_init, authenticator_cls):
+        consumer_key = "key"
+        consumer_secret = "secret"
+        username = "username"
+        password = "password"
+        replay = object()
+        replay_fallback = object()
+        connection_timeout = 1
+        max_pending_count = 2
+        loop = object()
+
+        SalesforceStreamingClient(
+            consumer_key=consumer_key,
+            consumer_secret=consumer_secret,
+            username=username,
+            password=password,
+            replay=replay,
+            replay_fallback=replay_fallback,
+            connection_timeout=connection_timeout,
+            max_pending_count=max_pending_count,
+            loop=loop
+        )
+
+        authenticator_cls.assert_called_with(
+            consumer_key=consumer_key,
+            consumer_secret=consumer_secret,
+            username=username,
+            password=password
+        )
+        super_init.assert_called_with(
+            authenticator_cls.return_value,
+            replay=replay,
+            replay_fallback=replay_fallback,
+            connection_timeout=connection_timeout,
+            max_pending_count=max_pending_count,
+            loop=loop
+        )
