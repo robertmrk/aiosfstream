@@ -10,7 +10,10 @@ from aiocometd.constants import META_CHANNEL_PREFIX, MetaChannel
 @unique
 class ReplayOption(IntEnum):
     """Replay options supported by Salesforce"""
+    #: Receive new events that are broadcast after the client subscribes
     NEW_EVENTS = -1
+    #: Receive all events, including past events that are within the 24-hour
+    #: retention window and new events sent after subscription
     ALL_EVENTS = -2
 
 
