@@ -90,6 +90,10 @@ class Client(CometdClient):
         await super().open()
 
     @translate_errors
+    async def close(self):
+        await super().close()
+
+    @translate_errors
     async def subscribe(self, channel):
         try:
             await super().subscribe(channel)

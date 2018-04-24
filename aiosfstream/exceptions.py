@@ -105,8 +105,9 @@ def translate_errors(func):
     :param func: The wrapped function
     :return: The function wrapper
     """
+    # pylint: disable=missing-docstring
     @wraps(func)
-    async def async_wrapper(*args, **kwargs):  # pylint: disable=missing-docstring
+    async def async_wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
         except cometd_exc.AiocometdException as cometd_error:
@@ -116,7 +117,7 @@ def translate_errors(func):
             raise
 
     @wraps(func)
-    def wrapper(*args, **kwargs):  # pylint: disable=missing-docstring
+    def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except cometd_exc.AiocometdException as cometd_error:
@@ -124,6 +125,8 @@ def translate_errors(func):
             raise error_cls(*cometd_error.args) from cometd_error
         except Exception:
             raise
+
+    # pylint: enable=missing-docstring
 
     if asyncio.iscoroutinefunction(func):
         return async_wrapper

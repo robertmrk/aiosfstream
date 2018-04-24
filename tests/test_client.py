@@ -1,11 +1,12 @@
 from asynctest import TestCase, mock
 
-from aiocometd.exceptions import ServerError
+from aiocometd.exceptions import ServerError, AiocometdException
 
 from aiosfstream.client import Client, COMETD_PATH, API_VERSION
 from aiosfstream.auth import AuthenticatorBase
 from aiosfstream.replay import ReplayMarkerStorage, MappingStorage, \
     ConstantReplayId, ReplayOption
+from aiosfstream.exceptions import AiosfstreamException
 
 
 class TestGetCometdUrl(TestCase):
@@ -37,6 +38,13 @@ class TestClient(TestCase):
         self.assertEqual(client.connection_timeout, connection_timeout)
         self.assertEqual(client._max_pending_count, max_pending_count)
         self.assertEqual(client._loop, loop)
+
+    @mock.patch("aiosfstream.client.CometdClient.__init__")
+    def test_init_translates_errors(self, super_init):
+        super_init.side_effect = AiocometdException()
+
+        with self.assertRaises(AiosfstreamException):
+            Client(self.authenticator)
 
     def test_init_vefiries_authenticator(self):
         with self.assertRaisesRegex(ValueError,
@@ -84,6 +92,28 @@ class TestClient(TestCase):
         self.authenticator.authenticate.assert_called()
         self.assertEqual(self.client.url, get_cometd_url.return_value)
         super_open.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.open")
+    @mock.patch("aiosfstream.client.Client.get_cometd_url")
+    async def test_open_translates_errors(self, get_cometd_url, super_open):
+        get_cometd_url.return_value = "url"
+        super_open.side_effect = AiocometdException()
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.open()
+
+    @mock.patch("aiosfstream.client.CometdClient.close")
+    async def test_close(self, super_close):
+        await self.client.close()
+
+        super_close.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.close")
+    async def test_close_translates_errors(self, super_close):
+        super_close.side_effect = AiocometdException()
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.close()
 
     @mock.patch("aiosfstream.client.CometdClient.subscribe")
     async def test_subscribe_successful(self, super_subscribe):
@@ -153,6 +183,130 @@ class TestClient(TestCase):
 
         super_subscribe.assert_called_with(channel)
         self.assertIsNone(self.client.replay_storage.replay_fallback)
+
+    @mock.patch("aiosfstream.client.CometdClient.subscribe")
+    async def test_subscribe_translates_errors(self, super_subscribe):
+        super_subscribe.side_effect = AiocometdException()
+        channel = "/foo/bar"
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.subscribe(channel)
+
+        super_subscribe.assert_called_with(channel)
+
+    @mock.patch("aiosfstream.client.CometdClient.unsubscribe")
+    async def test_unsubscribe(self, super_unsubscribe):
+        channel = "/foo/bar"
+
+        await self.client.unsubscribe(channel)
+
+        super_unsubscribe.assert_called_with(channel)
+
+    @mock.patch("aiosfstream.client.CometdClient.unsubscribe")
+    async def test_unsubscribe_translates_errors(self, super_unsubscribe):
+        super_unsubscribe.side_effect = AiocometdException()
+        channel = "/foo/bar"
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.unsubscribe(channel)
+
+        super_unsubscribe.assert_called_with(channel)
+
+    @mock.patch("aiosfstream.client.CometdClient.publish")
+    async def test_publish(self, super_publish):
+        channel = "/foo/bar"
+        super_publish.return_value = object()
+        data = object()
+
+        result = await self.client.publish(channel, data)
+
+        self.assertEqual(result, super_publish.return_value)
+        super_publish.assert_called_with(channel, data)
+
+    @mock.patch("aiosfstream.client.CometdClient.publish")
+    async def test_publish_translates_errors(self, super_publish):
+        super_publish.side_effect = AiocometdException()
+        channel = "/foo/bar"
+        data = object()
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.publish(channel, data)
+
+        super_publish.assert_called_with(channel, data)
+
+    @mock.patch("aiosfstream.client.CometdClient.receive")
+    async def test_receive(self, super_receive):
+        super_receive.return_value = object()
+
+        result = await self.client.receive()
+
+        self.assertEqual(result, super_receive.return_value)
+        super_receive.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.receive")
+    async def test_receive_translates_errors(self, super_receive):
+        super_receive.side_effect = AiocometdException()
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.receive()
+
+        super_receive.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.__aiter__")
+    async def test_aiter(self, super_aiter):
+        super_aiter.return_value = object()
+
+        result = await self.client.__aiter__()
+
+        self.assertEqual(result, super_aiter.return_value)
+        super_aiter.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.__aiter__")
+    async def test_aiter_translates_errors(self, super_aiter):
+        super_aiter.side_effect = AiocometdException()
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.__aiter__()
+
+        super_aiter.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.__aenter__")
+    async def test_aenter(self, super_aenter):
+        super_aenter.return_value = object()
+
+        result = await self.client.__aenter__()
+
+        self.assertEqual(result, super_aenter.return_value)
+        super_aenter.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.__aenter__")
+    async def test_aenter_translates_errors(self, super_aenter):
+        super_aenter.side_effect = AiocometdException()
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.__aenter__()
+
+        super_aenter.assert_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.__aexit__")
+    async def test_aexit(self, super_aexit):
+        super_aexit.return_value = object()
+        args = [1, 2, 3]
+
+        result = await self.client.__aexit__(*args)
+
+        self.assertEqual(result, super_aexit.return_value)
+        super_aexit.assert_called_with(*args)
+
+    @mock.patch("aiosfstream.client.CometdClient.__aexit__")
+    async def test_aexit_translates_errors(self, super_aexit):
+        super_aexit.side_effect = AiocometdException()
+        args = [1, 2, 3]
+
+        with self.assertRaises(AiosfstreamException):
+            await self.client.__aexit__(*args)
+
+        super_aexit.assert_called_with(*args)
 
 
 class TestCreateReplayStorage(TestCase):
