@@ -6,6 +6,8 @@ API Reference
 Client
 ------
 
+.. autoclass:: SalesforceStreamingClient
+
 .. autoclass:: Client
 
     .. autocomethod:: open

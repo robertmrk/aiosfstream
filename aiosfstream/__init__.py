@@ -2,7 +2,7 @@
 import logging
 
 from ._metadata import VERSION as __version__  # noqa: F401
-from .client import Client  # noqa: F401
+from .client import Client, SalesforceStreamingClient  # noqa: F401
 from .auth import PasswordAuthenticator  # noqa: F401
 from .auth import RefreshTokenAuthenticator  # noqa: F401
 
