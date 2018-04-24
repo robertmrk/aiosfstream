@@ -19,6 +19,10 @@ class ReplayOption(IntEnum):
 
 
 #: Class for storing a message replay id and its creation date
+#:
+#: :param str date: Creation date of a message, as a ISO 8601 formatted \
+#:                  datetime string
+#: :param int replay_id: Replay id of a message
 ReplayMarker = namedtuple("ReplayMarker", "date, replay_id")
 
 
@@ -112,7 +116,7 @@ class ReplayMarkerStorage(Extension):
         :param str subscription: Name of the subscribed channel
         :return: A replay marker or ``None`` if there is nothing stored for \
         the given *subscription*
-        :rtype: ReplayMarker
+        :rtype: ReplayMarker or None
         """
 
     @abstractmethod
@@ -129,12 +133,13 @@ class MappingStorage(ReplayMarkerStorage):
     def __init__(self, mapping):
         """
         :param mapping: A MutableMapping object for storing replay markers
-        :type mapping. collections.abc.MutableMapping
+        :type mapping: collections.abc.MutableMapping
         """
         if not isinstance(mapping, abc.MutableMapping):
             raise TypeError("mapping parameter should be an instance of "
                             "MutableMapping.")
         super().__init__()
+        #: A MutableMapping object for storing replay markers
         self.mapping = mapping
 
     def __repr__(self):
@@ -160,6 +165,7 @@ class DefaultReplayIdMixin:  # pylint: disable=too-few-public-methods
         :param int default_id: A replay id
         """
         super().__init__(**kwargs)
+        #: A replay id
         self.default_id = default_id
 
     async def get_replay_id(self, subscription):
@@ -178,12 +184,12 @@ class DefaultReplayIdMixin:  # pylint: disable=too-few-public-methods
 
 class ConstantReplayId(DefaultReplayIdMixin, ReplayMarkerStorage):
     """A replay marker storage which will return a constant replay id for
-    every channel
+    every subscription
 
     .. note::
 
         This implementations doesn't actually stores anything for later
-        retrieval. Calls to :meth:`set_replay_marker` are ignored.
+        retrieval.
     """
     def __repr__(self):
         """Formal string representation"""
@@ -203,8 +209,8 @@ class DefaultMappingStorage(DefaultReplayIdMixin, MappingStorage):
     def __init__(self, mapping, default_id):
         """
         :param mapping: A MutableMapping object for storing replay markers
-        :type mapping. collections.abc.MutableMapping
-         :param int default_id: A replay id
+        :type mapping: collections.abc.MutableMapping
+        :param int default_id: A replay id
         """
         super().__init__(mapping=mapping, default_id=default_id)
 

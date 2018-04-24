@@ -25,18 +25,19 @@ class Client(CometdClient):
                  max_pending_count=100, loop=None):
         """
         :param authenticator: An authenticator object
-        :type authenticator: aiosfstream.auth.AuthenticatorBase
-        :param replay: A ReplayOption or ann object capable of storing replay \
+        :type authenticator: ~aiosfstream.auth.AuthenticatorBase
+        :param replay: A ReplayOption or an object capable of storing replay \
         ids if you want to take advantage of Salesforce's replay extension. \
-        You can use one of the available :obj:`~replay.ReplayOption`s, or an \
-        object that supports the MutableMapping protocol like :obj:`dict` or \
-        :obj:`defaultdict`, :obj:`shelve.Shelf` etc., or a custom \
-        :obj:`replay.ReplayMarkerStorage` implementation.
-        :type replay: replay.ReplayOption, replay.ReplayMarkerStorage, \
+        You can use one of the :obj:`ReplayOptions <ReplayOption>`, or \
+        an object that supports the MutableMapping protocol like :obj:`dict`, \
+        :obj:`~collections.defaultdict`, :obj:`~shelve.Shelf` etc. or a \
+        custom :obj:`ReplayMarkerStorage` implementation.
+        :type replay: ReplayOption, ReplayMarkerStorage, \
         collections.abc.MutableMapping or None
         :param replay_fallback: Replay fallback policy, for when a subscribe \
-        operation fails because of a way too old replay id
-        :type replay_fallback: replay.ReplayOption
+        operation fails because a replay id was specified for a message \
+        outside the retention window
+        :type replay_fallback: ReplayOption
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
@@ -191,19 +192,20 @@ class SalesforceStreamingClient(Client):
         app definition
         :param str consumer_secret: Consumer secret from the Salesforce \
         connected app definition
-        :param str username: User's username
-        :param str password: User's password
-        :param replay: A ReplayOption or ann object capable of storing replay \
+        :param str username: Salesforce username
+        :param str password: Salesforce password
+        :param replay: A ReplayOption or an object capable of storing replay \
         ids if you want to take advantage of Salesforce's replay extension. \
-        You can use one of the available :obj:`~replay.ReplayOption`s, or an \
-        object that supports the MutableMapping protocol like :obj:`dict` or \
-        :obj:`defaultdict`, :obj:`shelve.Shelf` etc., or a custom \
-        :obj:`replay.ReplayMarkerStorage` implementation.
-        :type replay: replay.ReplayOption, replay.ReplayMarkerStorage, \
+        You can use one of the :obj:`ReplayOptions <.ReplayOption>`, or \
+        an object that supports the MutableMapping protocol like :obj:`dict`, \
+        :obj:`~collections.defaultdict`, :obj:`~shelve.Shelf` etc. or a \
+        custom :obj:`ReplayMarkerStorage` implementation.
+        :type replay: ReplayOption, ReplayMarkerStorage, \
         collections.abc.MutableMapping or None
         :param replay_fallback: Replay fallback policy, for when a subscribe \
-        operation fails because of a way too old replay id
-        :type replay_fallback: replay.ReplayOption
+        operation fails because a replay id was specified for a message \
+        outside the retention window
+        :type replay_fallback: ReplayOption
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
