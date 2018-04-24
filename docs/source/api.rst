@@ -37,24 +37,24 @@ Authenticators
 Replay
 ------
 
-.. autoclass:: aiosfstream.replay.ReplayOption
+.. autoclass:: aiosfstream.ReplayOption
     :members:
     :undoc-members:
 
-.. autoclass:: aiosfstream.replay.ReplayMarker
+.. autoclass:: aiosfstream.ReplayMarker
     :members:
     :show-inheritance:
 
-.. autoclass:: aiosfstream.replay.ReplayMarkerStorage
+.. autoclass:: aiosfstream.ReplayMarkerStorage
 
     .. autocomethod:: get_replay_marker
     .. autocomethod:: set_replay_marker
 
-.. autoclass:: aiosfstream.replay.MappingStorage
+.. autoclass:: aiosfstream.MappingStorage
 
-.. autoclass:: aiosfstream.replay.DefaultMappingStorage
+.. autoclass:: aiosfstream.DefaultMappingStorage
 
-.. autoclass:: aiosfstream.replay.ConstantReplayId
+.. autoclass:: aiosfstream.ConstantReplayId
 
 Exceptions
 ----------

@@ -28,16 +28,16 @@ class Client(CometdClient):
         :type authenticator: ~aiosfstream.auth.AuthenticatorBase
         :param replay: A ReplayOption or an object capable of storing replay \
         ids if you want to take advantage of Salesforce's replay extension. \
-        You can use one of the :obj:`ReplayOptions <replay.ReplayOption>`, or \
+        You can use one of the :obj:`ReplayOptions <ReplayOption>`, or \
         an object that supports the MutableMapping protocol like :obj:`dict`, \
         :obj:`~collections.defaultdict`, :obj:`~shelve.Shelf` etc. or a \
-        custom :obj:`~replay.ReplayMarkerStorage` implementation.
-        :type replay: ~replay.ReplayOption, ~replay.ReplayMarkerStorage, \
+        custom :obj:`ReplayMarkerStorage` implementation.
+        :type replay: ReplayOption, ReplayMarkerStorage, \
         collections.abc.MutableMapping or None
         :param replay_fallback: Replay fallback policy, for when a subscribe \
         operation fails because a replay id was specified for a message \
         outside the retention window
-        :type replay_fallback: ~replay.ReplayOption
+        :type replay_fallback: ReplayOption
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
@@ -196,16 +196,16 @@ class SalesforceStreamingClient(Client):
         :param str password: Salesforce password
         :param replay: A ReplayOption or an object capable of storing replay \
         ids if you want to take advantage of Salesforce's replay extension. \
-        You can use one of the :obj:`ReplayOptions <replay.ReplayOption>`, or \
+        You can use one of the :obj:`ReplayOptions <.ReplayOption>`, or \
         an object that supports the MutableMapping protocol like :obj:`dict`, \
         :obj:`~collections.defaultdict`, :obj:`~shelve.Shelf` etc. or a \
-        custom :obj:`~replay.ReplayMarkerStorage` implementation.
-        :type replay: ~replay.ReplayOption, ~replay.ReplayMarkerStorage, \
+        custom :obj:`ReplayMarkerStorage` implementation.
+        :type replay: ReplayOption, ReplayMarkerStorage, \
         collections.abc.MutableMapping or None
         :param replay_fallback: Replay fallback policy, for when a subscribe \
         operation fails because a replay id was specified for a message \
         outside the retention window
-        :type replay_fallback: ~replay.ReplayOption
+        :type replay_fallback: ReplayOption
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
