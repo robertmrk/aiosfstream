@@ -35,7 +35,8 @@ setup(
     name=metadata["TITLE"],
     version=metadata["VERSION"],
     description=metadata["DESCRIPTION"],
-    long_description='\n\n'.join((read('README.rst'), read('CHANGES.rst'))),
+    long_description='\n\n'.join((read('DESCRIPTION.rst'),
+                                  read('docs/source/changes.rst'))),
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
