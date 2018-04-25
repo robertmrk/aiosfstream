@@ -255,11 +255,15 @@ class TestClient(TestCase):
     @mock.patch("aiosfstream.client.CometdClient.receive")
     async def test_receive(self, super_receive):
         super_receive.return_value = object()
+        self.client.replay_storage.extract_replay_id = mock.CoroutineMock()
 
         result = await self.client.receive()
 
         self.assertEqual(result, super_receive.return_value)
         super_receive.assert_called()
+        self.client.replay_storage.extract_replay_id.assert_called_with(
+            super_receive.return_value
+        )
 
     @mock.patch("aiosfstream.client.CometdClient.receive")
     async def test_receive_translates_errors(self, super_receive):

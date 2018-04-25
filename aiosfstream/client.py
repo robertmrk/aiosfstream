@@ -129,7 +129,12 @@ class Client(CometdClient):
 
     @translate_errors
     async def receive(self):
-        return await super().receive()
+        response = await super().receive()
+        # only extract the replay id from the message once we're sure that
+        # it's going to be consumed, otherwise unconsumed messages might get
+        # skipped if client reconnects with replay
+        await self.replay_storage.extract_replay_id(response)
+        return response
 
     @translate_errors
     async def __aiter__(self):

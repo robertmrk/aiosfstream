@@ -24,17 +24,7 @@ class TestReplayStorage(TestCase):
     def test_init(self):
         self.assertIsNone(self.replay_storage.replay_fallback)
 
-    async def test_incoming_with_meta_channel(self):
-        self.replay_storage.extract_replay_id = mock.CoroutineMock()
-        message = {
-            "channel": MetaChannel.HANDSHAKE
-        }
-
-        await self.replay_storage.incoming([message])
-
-        self.replay_storage.extract_replay_id.assert_not_called()
-
-    async def test_incoming_with_broadcast_channel(self):
+    async def test_incoming_doesnt_extracts_replay_id(self):
         self.replay_storage.extract_replay_id = mock.CoroutineMock()
         message = {
             "channel": "/foo/bar"
@@ -42,7 +32,7 @@ class TestReplayStorage(TestCase):
 
         await self.replay_storage.incoming([message])
 
-        self.replay_storage.extract_replay_id.assert_called_with(message)
+        self.replay_storage.extract_replay_id.assert_not_called()
 
     async def test_outgoing_with_subscribe(self):
         self.replay_storage.insert_replay_id = mock.CoroutineMock()

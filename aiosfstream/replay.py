@@ -5,7 +5,7 @@ from enum import IntEnum, unique
 import reprlib
 
 from aiocometd import Extension
-from aiocometd.constants import META_CHANNEL_PREFIX, MetaChannel
+from aiocometd.constants import MetaChannel
 
 
 @unique
@@ -33,12 +33,7 @@ class ReplayMarkerStorage(Extension):
         self.replay_fallback = None
 
     async def incoming(self, payload, headers=None):
-        for message in payload:
-            # messages for every channel should have a replay id except
-            # meta channels
-            if not message["channel"].startswith(META_CHANNEL_PREFIX):
-                # extract the replay id from the message
-                await self.extract_replay_id(message)
+        pass
 
     async def outgoing(self, payload, headers):
         for message in payload:
