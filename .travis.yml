@@ -1,0 +1,11 @@
+language: python
+python:
+- "3.6"
+before_install:
+- pip install -q coveralls
+install:
+- pip install .[tests]
+script:
+- coverage run -m unittest discover tests
+after_success:
+- coveralls
