@@ -57,22 +57,7 @@ Usage
         loop = asyncio.get_event_loop()
         loop.run_until_complete(stream_events())
 
-Install
--------
-
-.. code-block:: bash
-
-    pip install aiosfstream
-
-Requirements
-------------
-
-- Python 3.6+
-- aiohttp_
-- aiocometd_
-
 .. _aiohttp: https://github.com/aio-libs/aiohttp/
-.. _aiocometd: https://github.com/robertmrk/aiocometd/
 .. _asyncio: https://docs.python.org/3/library/asyncio.html
 .. _api: https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/intro_stream.htm
 .. _PushTopic: https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/working_with_pushtopics.htm
