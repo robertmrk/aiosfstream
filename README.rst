@@ -1,6 +1,22 @@
 aiosfstream
 ===========
 
+.. image:: https://badge.fury.io/py/aiosfstream.svg
+    :target: https://badge.fury.io/py/aiosfstream
+    :alt: PyPI package
+
+.. image:: https://readthedocs.org/projects/aiosfstream/badge/?version=latest
+    :target: http://aiosfstream.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
+.. image:: https://travis-ci.org/robertmrk/aiosfstream.svg?branch=develop
+    :target: https://travis-ci.org/robertmrk/aiosfstream
+    :alt: Build status
+
+.. image:: https://coveralls.io/repos/github/robertmrk/aiosfstream/badge.svg
+    :target: https://coveralls.io/github/robertmrk/aiosfstream
+    :alt: Coverage
+
 .. image:: https://img.shields.io/badge/License-MIT-yellow.svg
     :target: https://opensource.org/licenses/MIT
     :alt: MIT license
