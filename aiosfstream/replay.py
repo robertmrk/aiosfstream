@@ -116,7 +116,7 @@ class ReplayMarkerStorage(Extension):
 
     @abstractmethod
     async def set_replay_marker(self, subscription, replay_marker):
-        """Store the *default_id* for the given *subscription*
+        """Store the *replay_marker* for the given *subscription*
 
         :param str subscription: Name of the subscribed channel
         :param ReplayMarker replay_marker: A replay marker

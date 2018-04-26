@@ -8,6 +8,192 @@ Advanced Usage
 Replay configuration
 --------------------
 
+Salesforce stores events for 24 hours. Events outside the 24-hour retention
+period are discarded.
+
+ReplayOption
+~~~~~~~~~~~~
+
+A subscriber can choose which events to receive, such as all events within
+the retention window or starting after a particular event. In the
+:py:obj:`Client` object this can be specified with the ``replay`` parameter.
+The default is to receive only the new events sent after subscribing, the
+default ``replay`` parameter is :py:obj:`ReplayOption.NEW_EVENTS`
+
+This high-level diagram shows how event consumers can read a stream of events
+by using various replay options.
+
+.. image:: _static/replay.png
+
+If you want to receive all events within the retention window every time the
+:py:obj:`Client` connects, before receiving new events, then the
+:py:obj:`ReplayOption.ALL_EVENTS` value should be passed to the
+:py:obj:`Client`.
+
+.. code-block:: python
+
+    async with SalesforceStreamingClient(
+                    consumer_key="<consumer key>",
+                    consumer_secret="<consumer secret>",
+                    username="<username>",
+                    password="<password>",
+                    replay=ReplayOption.ALL_EVENTS) as client:
+
+         await client.subscribe("/topic/foo")
+
+                async for message in client:
+                    # process message
+
+ReplayMarkerStorage
+~~~~~~~~~~~~~~~~~~~
+
+Although using a fixed :py:obj:`ReplayOption` can be sometimes useful, the
+real advantage of using Salesforce's replay_ extension comes from being able
+to continue to process event messages from the point where the client left off.
+To take advantage of this feature, all you have to do is to
+pass an object capable of storing the most recent :py:obj:`ReplayMarker` for
+every channel.
+
+Salesforce extends the event messages with ``repalyId`` and ``createdDate``
+fields (called as :py:obj:`ReplayMarker` by aiosfstream).
+
+The simplest way is to pass an object for the ``replay`` parameter that
+inherits from :py:obj:`collections.abc.MutableMapping`. This can be a simple
+:py:obj:`dict`, :py:obj:`~collections.OrderedDict` or if you want to use
+persistent storage then a :py:obj:`~shelve.Shelf` object, or maybe one of the
+key-value database drivers that inherit from
+:py:obj:`collections.abc.MutableMapping`.
+
+.. code-block:: python
+
+        with shelve.open("replay.db") as replay:
+
+            async with SalesforceStreamingClient(
+                consumer_key="<consumer key>",
+                consumer_secret="<consumer secret>",
+                username="<username>",
+                password="<password>",
+                replay=replay) as client:
+
+                await client.subscribe("/topic/foo")
+
+                async for message in client:
+                    # process message
+
+By using a :py:obj:`collections.abc.MutableMapping` object, the client on the
+first connection will receive only new events, and on reconnection will
+continue from the last unretrieved message. If you want to receive all events
+from the retention window before continuing with new events, combined with the
+advantage of continuation on the next reconnect, then you can pass a
+:py:obj:`DefaultMappingStorage` object to the ``replay`` parameter.
+
+.. code-block:: python
+
+        with shelve.open("replay.db") as replay:
+
+            default_mapping = DefaultMappingStorage(
+                replay,
+                ReplayOption.ALL_EVENTS
+            )
+
+            async with SalesforceStreamingClient(
+                consumer_key="<consumer key>",
+                consumer_secret="<consumer secret>",
+                username="<username>",
+                password="<password>",
+                replay=default_mapping) as client:
+
+                await client.subscribe("/topic/foo")
+
+                async for message in client:
+                    # process message
+
+If you want complete control over how :py:obj:`ReplayMarkers <ReplayMarker>`
+are stored and retrieved or you want to use your favorite database whose
+driver doesn't inherit from :py:obj:`collections.abc.MutableMapping` then
+you can provide your own :py:obj:`ReplayMarkerStorage` implementation.
+
+.. code-block:: python
+
+        class MyReplayMarkerStorage(ReplayMarkerStorage):
+            async def set_replay_marker(self, subscription, replay_marker):
+                # store *replay_marker* for the given *subscription*
+
+            async def get_replay_marker(self, subscription):
+                # retrieve the replay marker for the given *subscription*
+
+        replay = MyReplayMarkerStorage()
+
+        async with SalesforceStreamingClient(
+            consumer_key="<consumer key>",
+            consumer_secret="<consumer secret>",
+            username="<username>",
+            password="<password>",
+            replay=replay) as client:
+
+            await client.subscribe("/topic/foo")
+
+            async for message in client:
+                # process message
+
+Subscription errors
+~~~~~~~~~~~~~~~~~~~
+
+Events outside the 24-hour retention period are discarded. If you're using some
+form of :py:obj:`ReplayMarkerStorage` or a
+:py:obj:`~collections.abc.MutableMapping` object, and if you're client doesn't
+connects to the Streaming API for more then 24 hours, then it's possible that
+the client will try to continue retrieving messages from a very old message
+outside the retention window. Since Salesforce no longer has the event message
+that the client would try to retrieve, it would raise
+:py:obj:`~exceptions.ServerError`.
+
+.. code-block:: python
+
+    try:
+        await client.subscribe("/topic/foo")
+    except ServerError as error:
+        print(error.error_message)
+
+The above code would print the following message, if the client would request
+and event outside the retention window::
+
+    The replayId {1} you provided was invalid.  Please provide a valid ID, -2
+    to replay all events, or -1 to replay only new events.
+
+To recover from an error like the above, you would have to discard the
+:py:obj:`ReplayMarker` for the problematic channel, and try to subscribe again.
+
+.. code-block:: python
+
+    try:
+        await client.subscribe("/topic/foo")
+    except ServerError as error:
+        del replay["/topic/foo"]
+        await client.subscribe(/topic/foo")
+
+To spare you the hassle of recovering from errors like the one above, you can
+pass a :py:obj:`ReplayOption` for the ``replay_fallback`` parameter. If a
+subscription error occurs, then :py:obj:`Client` will try to resubscribe using
+the specified :py:obj:`ReplayOption`.
+
+.. code-block:: python
+
+        with shelve.open("replay.db") as replay:
+
+            async with SalesforceStreamingClient(
+                consumer_key="<consumer key>",
+                consumer_secret="<consumer secret>",
+                username="<username>",
+                password="<password>",
+                replay=replay,
+                replay_fallback=ReplayOption.ALL_EVENTS) as client:
+
+                await client.subscribe("/topic/foo")
+
+                async for message in client:
+                    # process message
+
 Network failures
 ----------------
 

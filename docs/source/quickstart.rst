@@ -175,7 +175,7 @@ subscribing. To take advantage of message durability, all you have to do is to
 pass an object capable of storing the most recent :py:obj:`ReplayMarker`
 objects, so the next time the client reconnects, it can continue to process
 event messages from the point where it left off. The most convenient
-choice is a :py:obj:`shelve` object, which can store
+choice is a :py:obj:`~shelve.Shelf` object, which can store
 :py:obj:`ReplayMarkers <ReplayMarker>` on the disk, between application
 restarts.
 
@@ -195,8 +195,8 @@ restarts.
                 async for message in client:
                     # process message
 
-Besides :py:obj:`shelve` objects you can pass a lot of different kind of
-objects to the replay parameter, and you can configure different aspects of
+Besides :py:obj:`~shelve.Shelf` objects you can pass a lot of different kind
+of objects to the replay parameter, and you can configure different aspects of
 replay behavior as well. For a full description of replay configuration
 options check out the :ref:`replay_config` section.
 
