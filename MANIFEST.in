@@ -1,0 +1,8 @@
+include LICENSE.txt
+include DESCRIPTION.rst
+include README.rst
+include .pylintrc
+graft tests
+graft docs
+global-exclude *.pyc
+prune docs/build

@@ -1,0 +1,8 @@
+"""Package metadata"""
+TITLE = "aiosfstream"
+DESCRIPTION = "Salesforce Streaming API client for asyncio"
+KEYWORDS = "salesforce asyncio aiohttp comet cometd bayeux push streaming"
+URL = "https://github.com/robertmrk/aiosfstream"
+VERSION = "0.1.0"
+AUTHOR = "Róbert Márki"
+AUTHOR_EMAIL = "gsmiko@gmail.com"
