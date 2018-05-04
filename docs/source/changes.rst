@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.0 (2018-05-05)
+------------------
+
+- Enable the usage of third party JSON libraries
+- Expose authentication results as public attributes in Authenticator classes
+
 0.1.0 (2018-04-26)
 ------------------
 
