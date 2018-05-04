@@ -259,4 +259,26 @@ not consumed yet, the number of prefetched messages can be limited with the
 The current number of messages waiting to be consumed can be obtained from the
 :py:obj:`Client.pending_count` attribute.
 
+JSON encoder/decoder
+--------------------
+
+Besides the standard :obj:`json` module, many third party libraries offer
+JSON serialization/deserilization functionality. To use a different library for
+handling JSON data types, you can specify the callable to use for serialization
+with the ``json_dumps`` and the callable for deserialization with the
+``json_loads`` parameters of the :py:obj:`Client`.
+
+.. code-block:: python
+
+    import ujson
+
+    client = SalesforceStreamingClient(
+        consumer_key="<consumer key>",
+        consumer_secret="<consumer secret>",
+        username="<username>",
+        password="<password>",
+        json_dumps=ujson.dumps,
+        json_loads=ujson.loads
+    )
+
 .. include:: global.rst
