@@ -89,6 +89,7 @@ class TestClient(TestCase):
     @mock.patch("aiosfstream.client.Client.get_cometd_url")
     async def test_open(self, get_cometd_url, super_open):
         get_cometd_url.return_value = "url"
+        self.authenticator.instance_url = "instance_url"
 
         with self.assertLogs("aiosfstream.client", "DEBUG") as log:
             await self.client.open()
@@ -108,6 +109,7 @@ class TestClient(TestCase):
     @mock.patch("aiosfstream.client.Client.get_cometd_url")
     async def test_open_translates_errors(self, get_cometd_url, super_open):
         get_cometd_url.return_value = "url"
+        self.authenticator.instance_url = "instance_url"
         super_open.side_effect = AiocometdException()
 
         with self.assertRaises(AiosfstreamException):

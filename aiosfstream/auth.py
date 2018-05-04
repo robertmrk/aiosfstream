@@ -17,21 +17,24 @@ class AuthenticatorBase(AuthExtension):
     """Abstract base class to serve as a base for implementing concrete
     authenticators"""
     def __init__(self):
-        self._auth_response = None
-        self._auth_header = None
-
-    @property
-    def instance_url(self):
-        """Salesforce instance URL
-
-        ``None`` if not authenticated yet
-        """
-        if self._auth_response:
-            return self._auth_response["instance_url"]
-        return None
+        #: Salesforce session ID that can be used with the web services API
+        self.access_token = None
+        #: Value is Bearer for all responses that include an access token
+        self.token_type = None
+        #: A URL indicating the instance of the user’s org
+        self.instance_url = None
+        #: Identity URL that can be used to both identify the user and query \
+        #: for more information about the user
+        self.id = None  # pylint: disable=invalid-name
+        #: Base64-encoded HMAC-SHA256 signature signed with the consumer’s \
+        #: private key containing the concatenated ID and issued_at. Use to \
+        #: verify that the identity URL hasn’t changed since the server sent it
+        self.signature = None
+        #: Timestamp when the signature was created
+        self.issued_at = None
 
     async def outgoing(self, payload, headers):
-        headers["Authorization"] = self._auth_header
+        headers["Authorization"] = self.token_type + " " + self.access_token
 
     async def incoming(self, payload, headers=None):
         pass
@@ -48,13 +51,15 @@ class AuthenticatorBase(AuthExtension):
             raise AuthenticationError("Network request failed") from error
 
         if status_code != HTTPStatus.OK:
-            self._auth_response = None
-            self._auth_header = None
+            self.access_token = None
+            self.token_type = None
+            self.instance_url = None
+            self.id = None
+            self.signature = None
+            self.issued_at = None
             raise AuthenticationError("Authentication failed", response_data)
 
-        self._auth_response = response_data
-        self._auth_header = (self._auth_response["token_type"] + " " +
-                             self._auth_response["access_token"])
+        self.__dict__.update(response_data)
 
     @abstractmethod
     async def _authenticate(self):

@@ -18,36 +18,26 @@ class TestAuthenticatorBase(TestCase):
     def setUp(self):
         self.authenticator = Authenticator()
 
-    def test_instance_url(self):
-        self.authenticator._auth_response = {
-            "instance_url": "url"
-        }
-
-        result = self.authenticator.instance_url
-
-        self.assertEqual(result, "url")
-
-    def test_instance_url_none(self):
-        self.authenticator._auth_response = None
-
-        result = self.authenticator.instance_url
-
-        self.assertEqual(result, None)
-
     async def test_outgoing_sets_header(self):
-        self.authenticator._auth_header = "token"
+        self.authenticator.token_type = "Bearer"
+        self.authenticator.access_token = "token"
         payload = []
         headers = {}
 
         await self.authenticator.outgoing(payload, headers)
 
         self.assertEqual(headers["Authorization"],
-                         self.authenticator._auth_header)
+                         self.authenticator.token_type + " " +
+                         self.authenticator.access_token)
 
     async def test_authenticate(self):
         response = {
-            "token_type": "type",
-            "access_token": "token"
+            "id": "id_url",
+            "issued_at": "1278448832702",
+            "instance_url": "https://yourInstance.salesforce.com/",
+            "signature": "signature_value",
+            "access_token": "token",
+            "token_type": "Bearer"
         }
         status = HTTPStatus.OK
         self.authenticator._authenticate = mock.CoroutineMock(
@@ -56,16 +46,27 @@ class TestAuthenticatorBase(TestCase):
 
         await self.authenticator.authenticate()
 
-        self.assertEqual(self.authenticator._auth_response, response)
-        self.assertEqual(
-            self.authenticator._auth_header,
-            response["token_type"] + " " + response["access_token"]
-        )
+        self.assertEqual(self.authenticator.id,
+                         response["id"])
+        self.assertEqual(self.authenticator.issued_at,
+                         response["issued_at"])
+        self.assertEqual(self.authenticator.instance_url,
+                         response["instance_url"])
+        self.assertEqual(self.authenticator.signature,
+                         response["signature"])
+        self.assertEqual(self.authenticator.access_token,
+                         response["access_token"])
+        self.assertEqual(self.authenticator.token_type,
+                         response["token_type"])
 
     async def test_authenticate_non_ok_status_code(self):
         response = {
-            "token_type": "type",
-            "access_token": "token"
+            "id": "id_url",
+            "issued_at": "1278448832702",
+            "instance_url": "https://yourInstance.salesforce.com/",
+            "signature": "signature_value",
+            "access_token": "token",
+            "token_type": "Bearer"
         }
         status = HTTPStatus.BAD_REQUEST
         self.authenticator._authenticate = mock.CoroutineMock(
@@ -76,8 +77,12 @@ class TestAuthenticatorBase(TestCase):
                                     "Authentication failed"):
             await self.authenticator.authenticate()
 
-        self.assertIsNone(self.authenticator._auth_response)
-        self.assertIsNone(self.authenticator._auth_header)
+        self.assertIsNone(self.authenticator.id)
+        self.assertIsNone(self.authenticator.issued_at)
+        self.assertIsNone(self.authenticator.instance_url)
+        self.assertIsNone(self.authenticator.signature)
+        self.assertIsNone(self.authenticator.access_token)
+        self.assertIsNone(self.authenticator.token_type)
 
     async def test_authenticate_on_network_error(self):
         self.authenticator._authenticate = mock.CoroutineMock(
@@ -88,8 +93,12 @@ class TestAuthenticatorBase(TestCase):
                                     "Network request failed"):
             await self.authenticator.authenticate()
 
-        self.assertIsNone(self.authenticator._auth_response)
-        self.assertIsNone(self.authenticator._auth_header)
+        self.assertIsNone(self.authenticator.id)
+        self.assertIsNone(self.authenticator.issued_at)
+        self.assertIsNone(self.authenticator.instance_url)
+        self.assertIsNone(self.authenticator.signature)
+        self.assertIsNone(self.authenticator.access_token)
+        self.assertIsNone(self.authenticator.token_type)
 
     async def test_incoming(self):
         payload = []
