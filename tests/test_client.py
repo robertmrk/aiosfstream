@@ -28,18 +28,24 @@ class TestClient(TestCase):
     def test_init(self):
         connection_timeout = 20
         max_pending_count = 1
+        json_dumps = object()
+        json_loads = object()
         loop = object()
 
         with self.assertLogs("aiosfstream.client", "DEBUG") as log:
             client = Client(self.authenticator,
                             connection_timeout=connection_timeout,
                             max_pending_count=max_pending_count,
+                            json_dumps=json_dumps,
+                            json_loads=json_loads,
                             loop=loop)
 
         self.assertEqual(client.url, "")
         self.assertEqual(client.auth, self.authenticator)
         self.assertEqual(client.connection_timeout, connection_timeout)
         self.assertEqual(client._max_pending_count, max_pending_count)
+        self.assertEqual(client._json_dumps, json_dumps)
+        self.assertEqual(client._json_loads, json_loads)
         self.assertEqual(client._loop, loop)
         self.assertEqual(log.output,
                          ["DEBUG:aiosfstream.client:"
@@ -47,6 +53,8 @@ class TestClient(TestCase):
                           "replay fallback: {!r}"
                           .format(client.replay_storage,
                                   client.replay_fallback)])
+        self.assertEqual(client.auth.json_dumps, json_dumps)
+        self.assertEqual(client.auth.json_loads, json_loads)
 
     @mock.patch("aiosfstream.client.CometdClient.__init__")
     def test_init_translates_errors(self, super_init):
@@ -377,6 +385,8 @@ class TestSalesforceStreamingClient(TestCase):
         replay_fallback = object()
         connection_timeout = 1
         max_pending_count = 2
+        json_dumps = object()
+        json_loads = object()
         loop = object()
 
         SalesforceStreamingClient(
@@ -388,6 +398,8 @@ class TestSalesforceStreamingClient(TestCase):
             replay_fallback=replay_fallback,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
+            json_dumps=json_dumps,
+            json_loads=json_loads,
             loop=loop
         )
 
@@ -395,7 +407,9 @@ class TestSalesforceStreamingClient(TestCase):
             consumer_key=consumer_key,
             consumer_secret=consumer_secret,
             username=username,
-            password=password
+            password=password,
+            json_dumps=json_dumps,
+            json_loads=json_loads,
         )
         super_init.assert_called_with(
             authenticator_cls.return_value,
@@ -403,5 +417,7 @@ class TestSalesforceStreamingClient(TestCase):
             replay_fallback=replay_fallback,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
+            json_dumps=json_dumps,
+            json_loads=json_loads,
             loop=loop
         )

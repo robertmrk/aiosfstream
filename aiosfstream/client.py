@@ -2,6 +2,7 @@
 from collections import abc
 from http import HTTPStatus
 import logging
+import json
 
 from aiocometd import Client as CometdClient
 from aiocometd.exceptions import ServerError
@@ -22,7 +23,8 @@ class Client(CometdClient):
     @translate_errors
     def __init__(self, authenticator, *, replay=ReplayOption.NEW_EVENTS,
                  replay_fallback=None, connection_timeout=10.0,
-                 max_pending_count=100, loop=None):
+                 max_pending_count=100, json_dumps=json.dumps,
+                 json_loads=json.loads, loop=None):
         """
         :param authenticator: An authenticator object
         :type authenticator: ~aiosfstream.auth.AuthenticatorBase
@@ -47,6 +49,12 @@ class Client(CometdClient):
         this size then the connection will be suspended, until messages are \
         consumed. \
         If it is less than or equal to zero, the count is infinite.
+        :param json_dumps: Function for JSON serialization, the default is \
+        :func:`json.dumps`
+        :type json_dumps: :func:`callable`
+        :param json_loads: Function for JSON deserialization, the default is \
+        :func:`json.loads`
+        :type json_loads: :func:`callable`
         :param loop: Event :obj:`loop <asyncio.BaseEventLoop>` used to
                      schedule tasks. If *loop* is ``None`` then
                      :func:`asyncio.get_event_loop` is used to get the default
@@ -67,12 +75,20 @@ class Client(CometdClient):
                      "replay fallback: %r",
                      self.replay_storage,
                      self.replay_fallback)
+
+        # update the JSON serializer/deserializer of the authenticator with
+        # the callables passed to the client
+        authenticator.json_dumps = json_dumps
+        authenticator.json_loads = json_loads
+
         # set authenticator as the auth extension
         super().__init__("",
                          auth=authenticator,
                          extensions=[self.replay_storage],
                          connection_timeout=connection_timeout,
                          max_pending_count=max_pending_count,
+                         json_dumps=json_dumps,
+                         json_loads=json_loads,
                          loop=loop)
 
     @translate_errors
@@ -191,7 +207,8 @@ class SalesforceStreamingClient(Client):
                  consumer_key, consumer_secret, username, password,
                  replay=ReplayOption.NEW_EVENTS,
                  replay_fallback=None, connection_timeout=10.0,
-                 max_pending_count=100, loop=None):
+                 max_pending_count=100, json_dumps=json.dumps,
+                 json_loads=json.loads, loop=None):
         """
         :param str consumer_key: Consumer key from the Salesforce connected \
         app definition
@@ -220,6 +237,12 @@ class SalesforceStreamingClient(Client):
         this size then the connection will be suspended, until messages are \
         consumed. \
         If it is less than or equal to zero, the count is infinite.
+        :param json_dumps: Function for JSON serialization, the default is \
+        :func:`json.dumps`
+        :type json_dumps: :func:`callable`
+        :param json_loads: Function for JSON deserialization, the default is \
+        :func:`json.loads`
+        :type json_loads: :func:`callable`
         :param loop: Event :obj:`loop <asyncio.BaseEventLoop>` used to
                      schedule tasks. If *loop* is ``None`` then
                      :func:`asyncio.get_event_loop` is used to get the default
@@ -229,7 +252,9 @@ class SalesforceStreamingClient(Client):
             consumer_key=consumer_key,
             consumer_secret=consumer_secret,
             username=username,
-            password=password
+            password=password,
+            json_dumps=json_dumps,
+            json_loads=json_loads,
         )
         super().__init__(
             authenticator,
@@ -237,5 +262,7 @@ class SalesforceStreamingClient(Client):
             replay_fallback=replay_fallback,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
+            json_dumps=json_dumps,
+            json_loads=json_loads,
             loop=loop
         )

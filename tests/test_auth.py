@@ -18,6 +18,15 @@ class TestAuthenticatorBase(TestCase):
     def setUp(self):
         self.authenticator = Authenticator()
 
+    def test_init(self):
+        json_dumps = object()
+        json_loads = object()
+
+        auth = Authenticator(json_dumps=json_dumps, json_loads=json_loads)
+
+        self.assertIs(auth.json_dumps, json_dumps)
+        self.assertIs(auth.json_loads, json_loads)
+
     async def test_outgoing_sets_header(self):
         self.authenticator.token_type = "Bearer"
         self.authenticator.access_token = "token"
@@ -140,7 +149,13 @@ class TestPasswordAuthenticator(TestCase):
         result = await self.authenticator._authenticate()
 
         self.assertEqual(result, (status, response_data))
+        session_cls.assert_called_with(
+            json_serialize=self.authenticator.json_dumps
+        )
         session.post.assert_called_with(TOKEN_URL, data=expected_data)
+        response_obj.json.assert_called_with(
+            loads=self.authenticator.json_loads
+        )
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
 
@@ -188,7 +203,13 @@ class TestRefreshTokenAuthenticator(TestCase):
         result = await self.authenticator._authenticate()
 
         self.assertEqual(result, (status, response_data))
+        session_cls.assert_called_with(
+            json_serialize=self.authenticator.json_dumps
+        )
         session.post.assert_called_with(TOKEN_URL, data=expected_data)
+        response_obj.json.assert_called_with(
+            loads=self.authenticator.json_loads
+        )
         session.__aenter__.assert_called()
         session.__aexit__.assert_called()
 
