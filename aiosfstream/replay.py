@@ -86,9 +86,10 @@ class ReplayMarkerStorage(Extension):
 
         # only store the extracted replay marker, if there is no replay \
         # marker for the subscription yet, or if the stored replay marker is\
-        # older then the extracted one (otherwise, we're seeing a replayed \
-        # message, and in that case, it shouldn't be stored)
-        if not last_marker or last_marker.date < marker.date:
+        # older then the extracted one or it has the same data (otherwise,
+        # we're seeing a replayed message, and in that case, it shouldn't be
+        # stored)
+        if not last_marker or last_marker.date <= marker.date:
             await self.set_replay_marker(subscription, marker)
 
     async def get_replay_id(self, subscription):
