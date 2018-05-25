@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.2.1 (2018-05-25)
+------------------
+
+- Fix replay issues on mass record delete operations
+- Improve the documentation of the Client.publish method
+
 0.2.0 (2018-05-05)
 ------------------
 
