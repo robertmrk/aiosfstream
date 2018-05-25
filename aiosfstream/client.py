@@ -141,6 +141,31 @@ class Client(CometdClient):
 
     @translate_errors
     async def publish(self, channel, data):
+        """Publish *data* to the given *channel*
+
+        .. warning::
+
+            The Streaming API is implemented on top of CometD. The publish
+            operation is a CometD operation. While it's still a legal
+            operation, Salesforce chose not to implement the
+            publishing of Generic Streaming and Platform events with CometD.
+
+            You should use the `REST API to generate Generic Streaming events \
+            <https://developer.salesforce.com/docs/\
+            atlas.en-us.api_streaming.meta/api_streaming/\
+            generate_event_using_rest.htm>`_,
+            or use the `REST or SOAP API to publish Platform events <https://\
+            developer.salesforce.com/docs/atlas.en-us.platform_events.meta/\
+            platform_events/platform_events_publish_api.htm>`_.
+
+        :param str channel: Name of the channel
+        :param dict data: Data to send to the server
+        :return: Publish response
+        :rtype: dict
+        :raise ClientInvalidOperation: If the client is :obj:`closed`
+        :raise TransportError: If a network or transport related error occurs
+        :raise ServerError: If the publish request gets rejected by the server
+        """
         return await super().publish(channel, data)
 
     @translate_errors

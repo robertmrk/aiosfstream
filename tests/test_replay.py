@@ -197,6 +197,34 @@ class TestReplayStorage(TestCase):
             ReplayMarker(date=date, replay_id=id_value)
         )
 
+    async def test_extract_replay_id_on_previous_id_same_date(self):
+        self.replay_storage.set_replay_marker = mock.CoroutineMock()
+        date = datetime.now(timezone.utc).isoformat()
+        prev_marker = ReplayMarker(
+            date=date,
+            replay_id="old_id"
+        )
+        self.replay_storage.get_replay_marker = mock.CoroutineMock(
+            return_value=prev_marker
+        )
+        id_value = "id"
+        message = {
+            "channel": "/foo/bar",
+            "data": {
+                "event": {
+                    "createdDate": date,
+                    "replayId": id_value
+                }
+            }
+        }
+
+        await self.replay_storage.extract_replay_id(message)
+
+        self.replay_storage.set_replay_marker.assert_called_with(
+            message["channel"],
+            ReplayMarker(date=date, replay_id=id_value)
+        )
+
     async def test_extract_replay_id_on_previous_id_newer(self):
         self.replay_storage.set_replay_marker = mock.CoroutineMock()
         prev_marker = ReplayMarker(
