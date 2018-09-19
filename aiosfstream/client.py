@@ -207,9 +207,9 @@ class Client(CometdClient):
         """
         if isinstance(replay_param, ReplayMarkerStorage):
             return replay_param
-        elif isinstance(replay_param, abc.MutableMapping):
+        if isinstance(replay_param, abc.MutableMapping):
             return MappingStorage(replay_param)
-        elif isinstance(replay_param, ReplayOption):
+        if isinstance(replay_param, ReplayOption):
             return ConstantReplayId(replay_param)
         return None
 
