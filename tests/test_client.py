@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from asynctest import TestCase, mock
 
 from aiocometd.exceptions import ServerError, AiocometdException
@@ -24,6 +26,18 @@ class TestClient(TestCase):
     def setUp(self):
         self.authenticator = mock.create_autospec(AuthenticatorBase)
         self.client = Client(self.authenticator)
+
+    def make_asyncgen(self, return_value=None):
+        """Returns an asynchronous generator yielding the items of the
+        *return_value* if it's an iterable or raising it if it's an exception
+        """
+        async def async_gen(*args, **kwargs):
+            if isinstance(return_value, Exception):
+                raise return_value
+            if isinstance(return_value, Iterable):
+                for item in return_value:
+                    yield item
+        return async_gen
 
     def test_init(self):
         connection_timeout = 20
@@ -284,23 +298,20 @@ class TestClient(TestCase):
 
         super_receive.assert_called()
 
-    @mock.patch("aiosfstream.client.CometdClient.__aiter__")
-    async def test_aiter(self, super_aiter):
-        super_aiter.return_value = object()
+    async def test_aiter(self):
+        expected_result = [1, 2, 3]
 
-        result = await self.client.__aiter__()
+        with mock.patch("aiosfstream.client.CometdClient.__aiter__",
+                        self.make_asyncgen(expected_result)):
+            result = [item async for item in self.client]
 
-        self.assertEqual(result, super_aiter.return_value)
-        super_aiter.assert_called()
+        self.assertEqual(result, expected_result)
 
-    @mock.patch("aiosfstream.client.CometdClient.__aiter__")
-    async def test_aiter_translates_errors(self, super_aiter):
-        super_aiter.side_effect = AiocometdException()
-
-        with self.assertRaises(AiosfstreamException):
-            await self.client.__aiter__()
-
-        super_aiter.assert_called()
+    async def test_aiter_translates_errors(self):
+        with mock.patch("aiosfstream.client.CometdClient.__aiter__",
+                        self.make_asyncgen(AiocometdException())):
+            with self.assertRaises(AiosfstreamException):
+                await self.client.__aiter__().__anext__()
 
     @mock.patch("aiosfstream.client.CometdClient.__aenter__")
     async def test_aenter(self, super_aenter):

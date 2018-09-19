@@ -14,6 +14,7 @@ Exception hierarchy::
 """
 from functools import wraps
 import asyncio
+import contextlib
 
 import aiocometd.exceptions as cometd_exc
 
@@ -89,8 +90,9 @@ EXCEPTION_PAIRS = {
 }
 
 
-def translate_errors(func):
-    """Function decorator for translating the raised aiocometd \
+@contextlib.contextmanager
+def translate_errors_context():
+    """Context manager for translating the raised aiocometd \
     errors to their aiosfstream counterparts
 
     As every properly behaving library, aiosfstream uses its own exception
@@ -101,33 +103,32 @@ def translate_errors(func):
     the virtual base class of aiocometd exceptions, since exception handling
     only looks at the __mro__ to find the base class, we have no choice but to
     redefine the same exceptions)
-
-    :param func: The wrapped function
-    :return: The function wrapper
     """
+    try:
+        yield
+    except cometd_exc.AiocometdException as cometd_error:
+        error_cls = EXCEPTION_PAIRS[type(cometd_error)]
+        raise error_cls(*cometd_error.args) from cometd_error
+
+
+def translate_errors(func):
+    """Function decorator for translating the raised aiocometd \
+    errors to their aiosfstream counterparts
+
+    :param func: Function or coroutine function
+    :return: The wrapped function
+    """
+    if not asyncio.iscoroutinefunction(func):
+        # for non coroutine functions use the context manager as a decorator
+        # pylint: disable=not-callable
+        return translate_errors_context()(func)
+        # pylint: enable=not-callable
+
     # pylint: disable=missing-docstring
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
-        try:
+        with translate_errors_context():
             return await func(*args, **kwargs)
-        except cometd_exc.AiocometdException as cometd_error:
-            error_cls = EXCEPTION_PAIRS[type(cometd_error)]
-            raise error_cls(*cometd_error.args) from cometd_error
-        except Exception:
-            raise
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except cometd_exc.AiocometdException as cometd_error:
-            error_cls = EXCEPTION_PAIRS[type(cometd_error)]
-            raise error_cls(*cometd_error.args) from cometd_error
-        except Exception:
-            raise
 
     # pylint: enable=missing-docstring
-
-    if asyncio.iscoroutinefunction(func):
-        return async_wrapper
-    return wrapper
+    return async_wrapper
