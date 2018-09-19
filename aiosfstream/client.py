@@ -10,7 +10,7 @@ from aiocometd.exceptions import ServerError
 from .auth import AuthenticatorBase, PasswordAuthenticator
 from .replay import ReplayOption, ReplayMarkerStorage, MappingStorage, \
     ConstantReplayId
-from .exceptions import translate_errors
+from .exceptions import translate_errors, translate_errors_context
 
 
 COMETD_PATH = "cometd"
@@ -179,7 +179,11 @@ class Client(CometdClient):
 
     @translate_errors
     async def __aiter__(self):
-        return super().__aiter__()
+        with translate_errors_context():
+            # pylint: disable=not-an-iterable
+            async for message in super().__aiter__():
+                # pylint: enable=not-an-iterable
+                yield message
 
     @translate_errors
     async def __aenter__(self):
