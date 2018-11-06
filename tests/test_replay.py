@@ -144,12 +144,50 @@ class TestReplayStorage(TestCase):
         self.replay_storage.get_replay_id.assert_called_with(
             message["subscription"])
 
+    def test_get_message_date_for_push_topic(self):
+        date = datetime.now(timezone.utc).isoformat()
+        message = {
+            "channel": "/foo/bar",
+            "data": {
+                "event": {
+                    "createdDate": date,
+                    "replayId": "id"
+                }
+            }
+        }
+
+        result = self.replay_storage.get_message_date(message)
+
+        self.assertEqual(result, date)
+
+    def test_get_message_date_for_platform_event(self):
+        date = datetime.now(timezone.utc).isoformat()
+        message = {
+            "channel": "/foo/bar",
+            "data": {
+                "payload": {
+                    "value__c": "some value",
+                    "CreatedById": "id",
+                    "CreatedDate": date
+                },
+                "event": {
+                    "replayId": "id"
+                }
+            }
+        }
+
+        result = self.replay_storage.get_message_date(message)
+
+        self.assertEqual(result, date)
+
     async def test_extract_replay_id_on_no_previous_id(self):
         self.replay_storage.set_replay_marker = mock.CoroutineMock()
         self.replay_storage.get_replay_marker = mock.CoroutineMock(
             return_value=None
         )
         date = datetime.now(timezone.utc).isoformat()
+        self.replay_storage.get_message_date = \
+            mock.MagicMock(return_value=date)
         id_value = "id"
         message = {
             "channel": "/foo/bar",
@@ -167,6 +205,7 @@ class TestReplayStorage(TestCase):
             message["channel"],
             ReplayMarker(date=date, replay_id=id_value)
         )
+        self.replay_storage.get_message_date.assert_called()
 
     async def test_extract_replay_id_on_previous_id_older(self):
         self.replay_storage.set_replay_marker = mock.CoroutineMock()
@@ -179,6 +218,8 @@ class TestReplayStorage(TestCase):
             return_value=prev_marker
         )
         date = datetime.now(timezone.utc).isoformat()
+        self.replay_storage.get_message_date = \
+            mock.MagicMock(return_value=date)
         id_value = "id"
         message = {
             "channel": "/foo/bar",
@@ -196,10 +237,13 @@ class TestReplayStorage(TestCase):
             message["channel"],
             ReplayMarker(date=date, replay_id=id_value)
         )
+        self.replay_storage.get_message_date.assert_called()
 
     async def test_extract_replay_id_on_previous_id_same_date(self):
         self.replay_storage.set_replay_marker = mock.CoroutineMock()
         date = datetime.now(timezone.utc).isoformat()
+        self.replay_storage.get_message_date = \
+            mock.MagicMock(return_value=date)
         prev_marker = ReplayMarker(
             date=date,
             replay_id="old_id"
@@ -224,6 +268,7 @@ class TestReplayStorage(TestCase):
             message["channel"],
             ReplayMarker(date=date, replay_id=id_value)
         )
+        self.replay_storage.get_message_date.assert_called()
 
     async def test_extract_replay_id_on_previous_id_newer(self):
         self.replay_storage.set_replay_marker = mock.CoroutineMock()
@@ -236,6 +281,8 @@ class TestReplayStorage(TestCase):
             return_value=prev_marker
         )
         date = datetime.now(timezone.utc).isoformat()
+        self.replay_storage.get_message_date = \
+            mock.MagicMock(return_value=date)
         id_value = "id"
         message = {
             "channel": "/foo/bar",
@@ -250,6 +297,7 @@ class TestReplayStorage(TestCase):
         await self.replay_storage.extract_replay_id(message)
 
         self.replay_storage.set_replay_marker.assert_not_called()
+        self.replay_storage.get_message_date.assert_called()
 
 
 class TestMappingReplayStorage(TestCase):

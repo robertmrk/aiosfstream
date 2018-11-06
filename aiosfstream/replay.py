@@ -67,6 +67,20 @@ class ReplayMarkerStorage(Extension):
                 message["ext"] = {}
             message["ext"]["replay"] = {subscription: replay_id}
 
+    @staticmethod
+    def get_message_date(message):
+        """Return the creation date of the *message*
+
+        :param dict message: An incoming message
+        :return: Creation date as an ISO 8601 formatted datetime string
+        :rtype: str
+        """
+        # get the creation date of the message from a PushTopic message
+        # structure if it exists, or read it from a PlatfromEvent message
+        # structure
+        return (message["data"]["event"].get("createdDate") or
+                message["data"]["payload"].get("CreatedDate"))
+
     async def extract_replay_id(self, message):
         """Extract and store the replay id present int the *message*
 
@@ -77,9 +91,8 @@ class ReplayMarkerStorage(Extension):
 
         # create the replay marker object from the creation date and the
         # actual id
-        event = message["data"]["event"]
-        marker = ReplayMarker(date=event["createdDate"],
-                              replay_id=event["replayId"])
+        marker = ReplayMarker(date=self.get_message_date(message),
+                              replay_id=message["data"]["event"]["replayId"])
 
         # get the last, stored, replay marker
         last_marker = await self.get_replay_marker(subscription)
