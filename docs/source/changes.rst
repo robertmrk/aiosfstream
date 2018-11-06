@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.2.5 (2018-11-06)
+------------------
+
+- Add missing changelog entries
+
+0.2.4 (2018-11-06)
+------------------
+
+- Fix platform event message creation date extraction issue
+
 0.2.3 (2018-09-19)
 ------------------
 
