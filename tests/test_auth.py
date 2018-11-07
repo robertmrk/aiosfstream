@@ -5,7 +5,7 @@ from asynctest import TestCase, mock
 from aiohttp.client_exceptions import ClientError
 
 from aiosfstream.auth import AuthenticatorBase, PasswordAuthenticator, \
-    TOKEN_URL, RefreshTokenAuthenticator
+    TOKEN_URL, SANDBOX_TOKEN_URL, RefreshTokenAuthenticator
 from aiosfstream.exceptions import AuthenticationError
 
 
@@ -118,6 +118,16 @@ class TestAuthenticatorBase(TestCase):
         self.assertFalse(payload)
         self.assertFalse(headers)
 
+    def test_token_url_non_sandbox(self):
+        auth = Authenticator()
+
+        self.assertEqual(auth._token_url, TOKEN_URL)
+
+    def test_token_url_sandbox(self):
+        auth = Authenticator(sandbox=True)
+
+        self.assertEqual(auth._token_url, SANDBOX_TOKEN_URL)
+
 
 class TestPasswordAuthenticator(TestCase):
     def setUp(self):
@@ -152,7 +162,8 @@ class TestPasswordAuthenticator(TestCase):
         session_cls.assert_called_with(
             json_serialize=self.authenticator.json_dumps
         )
-        session.post.assert_called_with(TOKEN_URL, data=expected_data)
+        session.post.assert_called_with(self.authenticator._token_url,
+                                        data=expected_data)
         response_obj.json.assert_called_with(
             loads=self.authenticator.json_loads
         )
@@ -206,7 +217,8 @@ class TestRefreshTokenAuthenticator(TestCase):
         session_cls.assert_called_with(
             json_serialize=self.authenticator.json_dumps
         )
-        session.post.assert_called_with(TOKEN_URL, data=expected_data)
+        session.post.assert_called_with(self.authenticator._token_url,
+                                        data=expected_data)
         response_obj.json.assert_called_with(
             loads=self.authenticator.json_loads
         )

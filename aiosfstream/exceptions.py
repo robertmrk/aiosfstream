@@ -106,6 +106,8 @@ def translate_errors_context():
     """
     try:
         yield
+    except AiosfstreamException:
+        raise
     except cometd_exc.AiocometdException as cometd_error:
         error_cls = EXCEPTION_PAIRS[type(cometd_error)]
         raise error_cls(*cometd_error.args) from cometd_error
