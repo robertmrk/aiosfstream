@@ -236,7 +236,7 @@ class SalesforceStreamingClient(Client):
                  consumer_key, consumer_secret, username, password,
                  replay=ReplayOption.NEW_EVENTS,
                  replay_fallback=None, connection_timeout=10.0,
-                 max_pending_count=100, json_dumps=json.dumps,
+                 max_pending_count=100, sandbox=False, json_dumps=json.dumps,
                  json_loads=json.loads, loop=None):
         """
         :param str consumer_key: Consumer key from the Salesforce connected \
@@ -266,6 +266,8 @@ class SalesforceStreamingClient(Client):
         this size then the connection will be suspended, until messages are \
         consumed. \
         If it is less than or equal to zero, the count is infinite.
+        :param bool sandbox: Marks whether the connection has to be made with \
+        a sandbox org or with a production org
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :type json_dumps: :func:`callable`
@@ -282,6 +284,7 @@ class SalesforceStreamingClient(Client):
             consumer_secret=consumer_secret,
             username=username,
             password=password,
+            sandbox=sandbox,
             json_dumps=json_dumps,
             json_loads=json_loads,
         )

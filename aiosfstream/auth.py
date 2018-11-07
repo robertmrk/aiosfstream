@@ -12,6 +12,7 @@ from .exceptions import AuthenticationError
 
 
 TOKEN_URL = "https://login.salesforce.com/services/oauth2/token"
+SANDBOX_TOKEN_URL = "https://test.salesforce.com/services/oauth2/token"
 
 
 # pylint: disable=too-many-instance-attributes
@@ -19,8 +20,11 @@ TOKEN_URL = "https://login.salesforce.com/services/oauth2/token"
 class AuthenticatorBase(AuthExtension):
     """Abstract base class to serve as a base for implementing concrete
     authenticators"""
-    def __init__(self, json_dumps=json.dumps, json_loads=json.loads):
+    def __init__(self, sandbox=False, json_dumps=json.dumps,
+                 json_loads=json.loads):
         """
+        :param bool sandbox: Marks whether the authentication has to be done \
+        for a sandbox org or for a production org
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :type json_dumps: :func:`callable`
@@ -28,6 +32,9 @@ class AuthenticatorBase(AuthExtension):
         :func:`json.loads`
         :type json_loads: :func:`callable`
         """
+        #: Marks whether the authentication has to be done for a sandbox org \
+        #: or for a production org
+        self._sandbox = sandbox
         #: Salesforce session ID that can be used with the web services API
         self.access_token = None
         #: Value is Bearer for all responses that include an access token
@@ -47,6 +54,13 @@ class AuthenticatorBase(AuthExtension):
         self.json_dumps = json_dumps
         #: Function for JSON deserialization
         self.json_loads = json_loads
+
+    @property
+    def _token_url(self):
+        """The URL that should be used for token requests"""
+        if self._sandbox:
+            return SANDBOX_TOKEN_URL
+        return TOKEN_URL
 
     async def outgoing(self, payload, headers):
         headers["Authorization"] = self.token_type + " " + self.access_token
@@ -93,7 +107,7 @@ class AuthenticatorBase(AuthExtension):
 class PasswordAuthenticator(AuthenticatorBase):
     """Authenticator for using the OAuth 2.0 Username-Password Flow"""
     def __init__(self, consumer_key, consumer_secret, username, password,
-                 json_dumps=json.dumps, json_loads=json.loads):
+                 sandbox=False, json_dumps=json.dumps, json_loads=json.loads):
         """
         :param str consumer_key: Consumer key from the Salesforce connected \
         app definition
@@ -101,6 +115,8 @@ class PasswordAuthenticator(AuthenticatorBase):
         connected app definition
         :param str username: Salesforce username
         :param str password: Salesforce password
+        :param bool sandbox: Marks whether the authentication has to be done \
+        for a sandbox org or for a production org
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :type json_dumps: :func:`callable`
@@ -108,7 +124,9 @@ class PasswordAuthenticator(AuthenticatorBase):
         :func:`json.loads`
         :type json_loads: :func:`callable`
         """
-        super().__init__(json_dumps=json_dumps, json_loads=json_loads)
+        super().__init__(sandbox=sandbox,
+                         json_dumps=json_dumps,
+                         json_loads=json_loads)
         #: OAuth2 client id
         self.client_id = consumer_key
         #: OAuth2 client secret
@@ -135,7 +153,7 @@ class PasswordAuthenticator(AuthenticatorBase):
                 "username": self.username,
                 "password": self.password
             }
-            response = await session.post(TOKEN_URL, data=data)
+            response = await session.post(self._token_url, data=data)
             response_data = await response.json(loads=self.json_loads)
             return response.status, response_data
 
@@ -143,7 +161,7 @@ class PasswordAuthenticator(AuthenticatorBase):
 class RefreshTokenAuthenticator(AuthenticatorBase):
     """Authenticator for using the OAuth 2.0 Refresh Token Flow"""
     def __init__(self, consumer_key, consumer_secret, refresh_token,
-                 json_dumps=json.dumps, json_loads=json.loads):
+                 sandbox=False, json_dumps=json.dumps, json_loads=json.loads):
         """
         :param str consumer_key: Consumer key from the Salesforce connected \
         app definition
@@ -152,6 +170,8 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
         :param str refresh_token: A refresh token obtained from Salesforce \
         by using one of its authentication methods (for example with the \
         OAuth 2.0 Web Server Authentication Flow)
+        :param bool sandbox: Marks whether the authentication has to be done \
+        for a sandbox org or for a production org
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :type json_dumps: :func:`callable`
@@ -159,7 +179,9 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
         :func:`json.loads`
         :type json_loads: :func:`callable`
         """
-        super().__init__(json_dumps=json_dumps, json_loads=json_loads)
+        super().__init__(sandbox=sandbox,
+                         json_dumps=json_dumps,
+                         json_loads=json_loads)
         #: OAuth2 client id
         self.client_id = consumer_key
         #: OAuth2 client secret
@@ -182,7 +204,7 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
                 "client_secret": self.client_secret,
                 "refresh_token": self.refresh_token
             }
-            response = await session.post(TOKEN_URL, data=data)
+            response = await session.post(self._token_url, data=data)
             response_data = await response.json(loads=self.json_loads)
             return response.status, response_data
 

@@ -399,6 +399,7 @@ class TestSalesforceStreamingClient(TestCase):
         json_dumps = object()
         json_loads = object()
         loop = object()
+        sandbox_enabled = True
 
         SalesforceStreamingClient(
             consumer_key=consumer_key,
@@ -409,6 +410,7 @@ class TestSalesforceStreamingClient(TestCase):
             replay_fallback=replay_fallback,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
+            sandbox=sandbox_enabled,
             json_dumps=json_dumps,
             json_loads=json_loads,
             loop=loop
@@ -419,6 +421,7 @@ class TestSalesforceStreamingClient(TestCase):
             consumer_secret=consumer_secret,
             username=username,
             password=password,
+            sandbox=sandbox_enabled,
             json_dumps=json_dumps,
             json_loads=json_loads,
         )
