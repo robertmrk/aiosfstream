@@ -69,6 +69,27 @@ You can get a refresh token using several different `authentication techniques
 supported by Salesforce <sf_auth_>`_, the most commonly used one is probably
 the `web server authentication flow <web_server_auth_>`_.
 
+Authentication on sandbox orgs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you're trying to connect to a sandbox org, then you have to assign
+``True`` to the ``sandbox`` parameter when creating the
+:py:obj:`SalesforceStreamingClient`, :py:obj:`PasswordAuthenticator` or
+:py:obj:`RefreshTokenAuthenticator` object. Furthermore, the name of the
+sandbox should be appended to the username. For example, if a username for a
+production org is user1@acme.com, and the sandbox is named `test`, the modified
+username to log in to the sandbox is user1@acme.com.test.
+
+.. code-block:: python
+
+    client = SalesforceStreamingClient(
+        consumer_key="<consumer key>",
+        consumer_secret="<consumer secret>",
+        username="<username>.<sandbox_name>",
+        password="<password>",
+        sandbox=True
+    )
+
 Connecting
 ----------
 
