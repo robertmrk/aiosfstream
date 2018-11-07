@@ -118,3 +118,31 @@ class TestTranslateError(TestCase):
             await exc.translate_errors(raise_error)()
 
         self.assertEqual(cm.exception.args, error.args)
+
+    def test_reraises_sfstream_error(self):
+        response = {
+            "error": "400:arg1,arg2:description"
+        }
+        error = exc.ServerError("Message", response)
+
+        def raise_error():
+            raise error
+
+        with self.assertRaises(exc.ServerError) as cm:
+            exc.translate_errors(raise_error)()
+
+        self.assertEqual(cm.exception.args, error.args)
+
+    async def test_async_reraises_sfstream_error(self):
+        response = {
+            "error": "400:arg1,arg2:description"
+        }
+        error = exc.ServerError("Message", response)
+
+        async def raise_error():
+            raise error
+
+        with self.assertRaises(exc.ServerError) as cm:
+            await exc.translate_errors(raise_error)()
+
+        self.assertEqual(cm.exception.args, error.args)
