@@ -11,7 +11,7 @@ from aiocometd.typing import JsonObject, JsonLoader, JsonDumper, Payload, \
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError
 
-from .exceptions import AuthenticationError
+from aiosfstream.exceptions import AuthenticationError
 
 
 TOKEN_URL = "https://login.salesforce.com/services/oauth2/token"

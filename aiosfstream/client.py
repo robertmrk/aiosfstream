@@ -11,10 +11,10 @@ from aiocometd import Client as CometdClient
 from aiocometd.exceptions import ServerError
 from aiocometd.typing import JsonObject, JsonLoader, JsonDumper
 
-from .auth import AuthenticatorBase, PasswordAuthenticator
-from .replay import ReplayOption, ReplayMarkerStorage, MappingStorage, \
-    ConstantReplayId, ReplayMarker
-from .exceptions import translate_errors, translate_errors_context
+from aiosfstream.auth import AuthenticatorBase, PasswordAuthenticator
+from aiosfstream.replay import ReplayOption, ReplayMarkerStorage, \
+    MappingStorage, ConstantReplayId, ReplayMarker
+from aiosfstream.exceptions import translate_errors, translate_errors_context
 
 
 COMETD_PATH = "cometd"
