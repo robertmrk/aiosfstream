@@ -5,7 +5,7 @@ from asynctest import TestCase, mock
 from aiocometd.exceptions import ServerError, AiocometdException
 
 from aiosfstream.client import Client, COMETD_PATH, API_VERSION, \
-    SalesforceStreamingClient
+    SalesforceStreamingClient, ReplayMarkerStoragePolicy
 from aiosfstream.auth import AuthenticatorBase
 from aiosfstream.replay import ReplayMarkerStorage, MappingStorage, \
     ConstantReplayId, ReplayOption
@@ -45,11 +45,13 @@ class TestClient(TestCase):
         json_dumps = object()
         json_loads = object()
         loop = object()
+        replay_storage_policy = object()
 
         with self.assertLogs("aiosfstream.client", "DEBUG") as log:
             client = Client(self.authenticator,
                             connection_timeout=connection_timeout,
                             max_pending_count=max_pending_count,
+                            replay_storage_policy=replay_storage_policy,
                             json_dumps=json_dumps,
                             json_loads=json_loads,
                             loop=loop)
@@ -67,6 +69,7 @@ class TestClient(TestCase):
                           "replay fallback: {!r}"
                           .format(client.replay_storage,
                                   client.replay_fallback)])
+        self.assertEqual(client.replay_storage_policy, replay_storage_policy)
         self.assertEqual(client.auth.json_dumps, json_dumps)
         self.assertEqual(client.auth.json_loads, json_loads)
 
@@ -290,6 +293,20 @@ class TestClient(TestCase):
         )
 
     @mock.patch("aiosfstream.client.CometdClient.receive")
+    async def test_receive_doesn_extracts_replay_id_on_manual_policy(
+            self, super_receive):
+        super_receive.return_value = object()
+        client = Client(self.authenticator,
+                        replay_storage_policy=ReplayMarkerStoragePolicy.MANUAL)
+        client.replay_storage.extract_replay_id = mock.CoroutineMock()
+
+        result = await client.receive()
+
+        self.assertEqual(result, super_receive.return_value)
+        super_receive.assert_called()
+        client.replay_storage.extract_replay_id.assert_not_called()
+
+    @mock.patch("aiosfstream.client.CometdClient.receive")
     async def test_receive_translates_errors(self, super_receive):
         super_receive.side_effect = AiocometdException()
 
@@ -394,6 +411,7 @@ class TestSalesforceStreamingClient(TestCase):
         password = "password"
         replay = object()
         replay_fallback = object()
+        replay_storage_policy = object()
         connection_timeout = 1
         max_pending_count = 2
         json_dumps = object()
@@ -408,6 +426,7 @@ class TestSalesforceStreamingClient(TestCase):
             password=password,
             replay=replay,
             replay_fallback=replay_fallback,
+            replay_storage_policy=replay_storage_policy,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
             sandbox=sandbox_enabled,
@@ -429,6 +448,7 @@ class TestSalesforceStreamingClient(TestCase):
             authenticator_cls.return_value,
             replay=replay,
             replay_fallback=replay_fallback,
+            replay_storage_policy=replay_storage_policy,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
             json_dumps=json_dumps,
