@@ -182,12 +182,13 @@ class TestReplayStorage(TestCase):
         self.assertEqual(result, date)
 
     def test_get_message_date_error_if_no_date_found(self):
-        date = datetime.now(timezone.utc).isoformat()
-        message = {}
+        with self.assertRaisesRegex(ReplayError,
+                                    "No message creation date found."):
+            self.replay_storage.get_message_date({})
 
         with self.assertRaisesRegex(ReplayError,
                                     "No message creation date found."):
-            self.replay_storage.get_message_date(message)
+            self.replay_storage.get_message_date({"data": {}})
 
     async def test_extract_replay_id_on_no_previous_id(self):
         self.replay_storage.set_replay_marker = mock.CoroutineMock()
