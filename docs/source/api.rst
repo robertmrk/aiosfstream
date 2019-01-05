@@ -96,3 +96,6 @@ Exceptions
     .. autoattribute:: error_code
     .. autoattribute:: error_args
     .. autoattribute:: error_message
+
+.. autoexception:: ReplayError
+    :members:

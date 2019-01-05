@@ -376,8 +376,8 @@ class TestCreateReplayStorage(TestCase):
         self.assertIsInstance(result, ConstantReplayId)
         self.assertIs(result.default_id, replay)
 
-    def test_returns_none_for_none_param(self):
-        replay = None
+    def test_returns_none_for_invalid_param(self):
+        replay = 5
 
         result = Client.create_replay_storage(replay)
 
