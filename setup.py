@@ -9,18 +9,17 @@ INSTALL_REQUIRES = [
 ]
 TESTS_REQUIRE = [
     "asynctest>=0.12.0,<1.0.0",
-    "coverage>=4.5,<5.0"
+    "coverage>=4.5,<5.0",
+    "flake8",
+    "pylint",
+    "mypy"
 ]
 DOCS_REQUIRE = [
     "Sphinx>=1.7,<2.0",
     "sphinxcontrib-asyncio>=0.2.0",
     "sphinx-autodoc-typehints"
 ]
-DEV_REQUIRE = [
-    "flake8",
-    "pylint",
-    "mypy"
-]
+DEV_REQUIRE = []
 
 
 def read(file_path):
