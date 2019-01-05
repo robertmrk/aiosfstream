@@ -39,6 +39,16 @@ class TestAuthenticatorBase(TestCase):
                          self.authenticator.token_type + " " +
                          self.authenticator.access_token)
 
+    async def test_outgoing_error_when_called_without_authentication(self):
+        payload = []
+        headers = {}
+
+        with self.assertRaisesRegex(AuthenticationError,
+                                    "Unknown token_type and access_token "
+                                    "values. Method called without "
+                                    "authenticating first."):
+            await self.authenticator.outgoing(payload, headers)
+
     async def test_authenticate(self):
         response = {
             "id": "id_url",

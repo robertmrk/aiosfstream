@@ -11,12 +11,18 @@ Exception hierarchy::
             TransportTimeoutError
             TransportConnectionClosed
         ServerError
+        ReplayError
 """
 from functools import wraps
 import asyncio
 import contextlib
+from typing import Generator, Callable, TypeVar, Any, cast
 
 import aiocometd.exceptions as cometd_exc
+
+
+FuncType = Callable[..., Any]
+Func = TypeVar('Func', bound=FuncType)
 
 
 # pylint: disable=too-many-ancestors
@@ -75,6 +81,10 @@ class ClientInvalidOperation(ClientError,
     """The requested operation can't be executed on the current state of the
     client"""
 
+
+class ReplayError(AiosfstreamException):
+    """Message replay related error"""
+
 # pylint: enable=too-many-ancestors
 
 
@@ -91,7 +101,7 @@ EXCEPTION_PAIRS = {
 
 
 @contextlib.contextmanager
-def translate_errors_context():
+def translate_errors_context() -> Generator[None, None, None]:
     """Context manager for translating the raised aiocometd \
     errors to their aiosfstream counterparts
 
@@ -113,7 +123,7 @@ def translate_errors_context():
         raise error_cls(*cometd_error.args) from cometd_error
 
 
-def translate_errors(func):
+def translate_errors(func: Func) -> Func:
     """Function decorator for translating the raised aiocometd \
     errors to their aiosfstream counterparts
 
@@ -123,14 +133,14 @@ def translate_errors(func):
     if not asyncio.iscoroutinefunction(func):
         # for non coroutine functions use the context manager as a decorator
         # pylint: disable=not-callable
-        return translate_errors_context()(func)
+        return cast(Func, translate_errors_context()(func))
         # pylint: enable=not-callable
 
     # pylint: disable=missing-docstring
     @wraps(func)
-    async def async_wrapper(*args, **kwargs):
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
         with translate_errors_context():
             return await func(*args, **kwargs)
 
     # pylint: enable=missing-docstring
-    return async_wrapper
+    return cast(Func, async_wrapper)

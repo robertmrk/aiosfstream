@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 INSTALL_REQUIRES = [
-    "aiocometd>=0.3.1,<0.4.0",
+    "aiocometd>=0.3.1,<0.5.0",
     "aiohttp>=3.1,<4.0"
 ]
 TESTS_REQUIRE = [
@@ -13,11 +13,13 @@ TESTS_REQUIRE = [
 ]
 DOCS_REQUIRE = [
     "Sphinx>=1.7,<2.0",
-    "sphinxcontrib-asyncio>=0.2.0"
+    "sphinxcontrib-asyncio>=0.2.0",
+    "sphinx-autodoc-typehints"
 ]
 DEV_REQUIRE = [
     "flake8",
-    "pylint"
+    "pylint",
+    "mypy"
 ]
 
 
