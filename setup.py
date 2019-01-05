@@ -50,6 +50,7 @@ setup(
     author=metadata["AUTHOR"],
     author_email=metadata["AUTHOR_EMAIL"],
     url=metadata["URL"],
+    project_urls=metadata["PROJECT_URLS"],
     license="MIT",
     packages=find_packages(exclude=("tests*", )),
     python_requires=">=3.6.0",

@@ -73,6 +73,11 @@ Usage
         loop = asyncio.get_event_loop()
         loop.run_until_complete(stream_events())
 
+Documentation
+-------------
+
+http://aiosfstream.readthedocs.io/
+
 .. _aiohttp: https://github.com/aio-libs/aiohttp/
 .. _asyncio: https://docs.python.org/3/library/asyncio.html
 .. _api: https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/intro_stream.htm
