@@ -158,7 +158,7 @@ class ReplayMarkerStorage(Extension):
         replay id from the *message* if no exceptions occur inside the runtime
         context
 
-        :param message: A response message
+        :param message: An incoming message
         :return: An asynchronous context manager
         """
         return ReplayMarkerStorageContextManager(self, message)

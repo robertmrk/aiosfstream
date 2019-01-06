@@ -86,15 +86,21 @@ class Client(CometdClient):
         if not isinstance(authenticator, AuthenticatorBase):
             raise TypeError(f"authenticator should be an instance of "
                             f"{AuthenticatorBase.__name__}.")
-
+        #: Replay fallback policy, for when a subscribe
+        #: operation fails because a replay id was specified for a message
+        #: outside the retention window
         self.replay_fallback = replay_fallback
 
         replay_storage = self.create_replay_storage(replay)
         if not isinstance(replay_storage, ReplayMarkerStorage):
             raise TypeError("{!r} is not a valid type for the replay "
                             "parameter.".format(type(replay).__name__))
-        self.replay_storage = replay_storage
+        #: :obj:`ReplayMarkerStorage` instance capable of storing
+        #: :py:obj:`ReplayMarker` objects
+        self.replay_storage: ReplayMarkerStorage = replay_storage
 
+        #: Defines at which point the :py:obj:`ReplayMarker` of received
+        #: messages will be stored
         self.replay_storage_policy = replay_storage_policy
 
         LOGGER.debug("Client created with replay storage: %r, "
