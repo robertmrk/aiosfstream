@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.0 (2019-01-06)
+------------------
+
+- Add type hints
+- Configurable replay storage behavior
+
 0.3.0 (2018-11-07)
 ------------------
 
