@@ -6,7 +6,7 @@ from aiocometd.constants import MetaChannel
 
 from aiosfstream.replay import ReplayMarkerStorage, ReplayMarker, \
     MappingStorage, ConstantReplayId, DefaultMappingStorage, \
-    DefaultReplayIdMixin
+    DefaultReplayIdMixin, ReplayMarkerStorageContextManager
 from aiosfstream.exceptions import ReplayError
 
 
@@ -308,6 +308,47 @@ class TestReplayStorage(TestCase):
 
         self.replay_storage.set_replay_marker.assert_not_called()
         self.replay_storage.get_message_date.assert_called()
+
+    def test_call_returns_context_manager(self):
+        message = object()
+
+        result = self.replay_storage(message)
+
+        self.assertIsInstance(result, ReplayMarkerStorageContextManager)
+        self.assertEqual(result.replay_storage, self.replay_storage)
+        self.assertEqual(result.message, message)
+
+
+class TestReplayMarkerStorageContextManager(TestCase):
+    def setUp(self):
+        self.replay_storage = ReplayMarkerStorageStub()
+        self.message = object()
+        self.context_manager = ReplayMarkerStorageContextManager(
+            self.replay_storage,
+            self.message
+        )
+
+    async def test_aenter(self):
+        self.assertIsNone(await self.context_manager.__aenter__())
+
+    async def test_aexit_extracts_replay_id(self):
+        self.replay_storage.extract_replay_id = mock.CoroutineMock()
+
+        async with self.context_manager:
+            pass
+
+        self.replay_storage.extract_replay_id.assert_called_with(self.message)
+
+    async def test_aexit_raises_error(self):
+        self.replay_storage.extract_replay_id = mock.CoroutineMock(
+            side_effect=ValueError()
+        )
+
+        with self.assertRaises(ValueError):
+            async with self.context_manager:
+                raise ValueError()
+
+        self.replay_storage.extract_replay_id.assert_not_called()
 
 
 class TestMappingReplayStorage(TestCase):

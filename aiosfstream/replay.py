@@ -3,7 +3,8 @@ from collections import abc
 from abc import abstractmethod
 from enum import IntEnum, unique
 import reprlib
-from typing import Optional, NamedTuple, MutableMapping, Any, cast
+from typing import Optional, NamedTuple, MutableMapping, Any, cast, \
+    AsyncContextManager
 
 from aiocometd import Extension
 from aiocometd.typing import Payload, Headers, JsonObject
@@ -151,6 +152,45 @@ class ReplayMarkerStorage(Extension):
         :param subscription: Name of the subscribed channel
         :param replay_marker: A replay marker
         """
+
+    def __call__(self, message: JsonObject) -> AsyncContextManager[None]:
+        """Return an asynchronous context manager instance for extracting the
+        replay id from the *message* if no exceptions occur inside the runtime
+        context
+
+        :param message: An incoming message
+        :return: An asynchronous context manager
+        """
+        return ReplayMarkerStorageContextManager(self, message)
+
+
+class ReplayMarkerStorageContextManager(AsyncContextManager[None]):
+    """Asynchronous context manager for conditionally extracting the replay \
+    id from a message
+
+    If the runtime context is exited with an exception then the given exception
+    will be raised, otherwise if the context is exited normally, then the
+    replay id will be extracted from the managed response message.
+    """
+    def __init__(self, replay_storage: ReplayMarkerStorage,
+                 message: JsonObject) -> None:
+        """
+        :param replay_storage: A :obj:`ReplayMarkerStorage` instance
+        :param message: A response message
+        """
+        self.replay_storage = replay_storage
+        self.message = message
+
+    async def __aenter__(self) -> None:
+        """Enter the runtime context"""
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) \
+            -> None:
+        """Extract the replay id from the message managed by the context or \
+        raise any exception triggered within the runtime context.
+        """
+        if exc_val is None:
+            await self.replay_storage.extract_replay_id(self.message)
 
 
 class MappingStorage(ReplayMarkerStorage):

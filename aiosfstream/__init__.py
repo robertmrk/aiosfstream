@@ -3,6 +3,7 @@ import logging
 
 from aiosfstream._metadata import VERSION as __version__  # noqa: F401
 from aiosfstream.client import Client, SalesforceStreamingClient  # noqa: F401
+from aiosfstream.client import ReplayMarkerStoragePolicy  # noqa: F401
 from aiosfstream.auth import PasswordAuthenticator  # noqa: F401
 from aiosfstream.auth import RefreshTokenAuthenticator  # noqa: F401
 from aiosfstream.replay import ReplayMarker, ReplayOption  # noqa: F401

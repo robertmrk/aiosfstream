@@ -194,6 +194,71 @@ the specified :py:obj:`ReplayOption`.
                 async for message in client:
                     # process message
 
+ReplayMarkerStoragePolicy
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you’re using some form of ReplayMarkerStorage or a MutableMapping object, the
+:py:obj:`ReplayMarker <ReplayMarker>` values for messages are stored just before
+they're returned by the :py:meth:`~Client.receive` method, or yielded from the
+asynchronous iterator of the :py:class:`Client` object if used as an iterable.
+
+This behaviour might not be optimal in situations when there is a high
+probability that the processing of the message might fail on the side of the
+user of the :py:class:`Client`. If the message processing code would raise an
+exception, the message wouldn't be processed completely, but since the message's
+:py:obj:`ReplayMarker` is already stored at that point, the
+failed message wouldn't be re-retrieved the next time the :py:class:`Client` is
+opened.
+
+In order to be able to retrieve unsuccessfully processed messages, users can
+take control at which point the :py:obj:`ReplayMarkers <ReplayMarker>`
+are stored. Pass the :py:obj:`ReplayMarkerStoragePolicy.MANUAL` option
+to the ``replay_storage_policy`` parameter when creating the :py:class:`Client`
+and call the :py:meth:`~ReplayMarkerStorage.extract_replay_id` method of
+:py:obj:`Client.replay_storage` once the message is successfully processed.
+
+.. code-block:: python
+
+    with shelve.open("replay.db") as replay:
+
+            async with SalesforceStreamingClient(
+                consumer_key="<consumer key>",
+                consumer_secret="<consumer secret>",
+                username="<username>",
+                password="<password>",
+                replay=replay,
+                replay_storage_policy=ReplayMarkerStoragePolicy.MANUAL) as client:
+
+                await client.subscribe("/topic/foo")
+
+                async for message in client:
+                    # message processing code raising errors...
+                    await client.replay_storage.extract_replay_id(message)
+
+The :py:obj:`Client.replay_storage` attribute can also be used as an
+asynchronous context manager, which will only store the
+:py:obj:`ReplayMarker` of the given message if no errors are
+raised in the runtime context.
+
+ .. code-block:: python
+
+    with shelve.open("replay.db") as replay:
+
+            async with SalesforceStreamingClient(
+                consumer_key="<consumer key>",
+                consumer_secret="<consumer secret>",
+                username="<username>",
+                password="<password>",
+                replay=replay,
+                replay_storage_policy=ReplayMarkerStoragePolicy.MANUAL) as client:
+
+                await client.subscribe("/topic/foo")
+
+                async for message in client:
+                    async with client.replay_storage(message):
+                        # message processing code raising errors...
+
+
 Network failures
 ----------------
 

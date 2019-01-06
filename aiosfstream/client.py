@@ -6,6 +6,7 @@ import json
 import asyncio
 from typing import Optional, Union, MutableMapping, AsyncIterator, Type, cast
 from types import TracebackType
+from enum import Enum, auto, unique
 
 from aiocometd import Client as CometdClient
 from aiocometd.exceptions import ServerError
@@ -25,12 +26,28 @@ ReplayParameter = Union[ReplayOption,
                         MutableMapping[str, ReplayMarker]]
 
 
+@unique
+class ReplayMarkerStoragePolicy(Enum):
+    """Defines the available replay marker storage policies"""
+    #: Store the replay marker of messages automatically, as soon as they're
+    #: received.
+    #: The downside of this approach is that the replay marker of a message
+    #: will be stored (thus marking it as successfully consumed) even if the
+    #: processing of the message fails in the client side code
+    AUTOMATIC = auto()
+    #: Store the replay marker of messages manually, after the message has been
+    #: successfully processed in client side code
+    MANUAL = auto()
+
+
 class Client(CometdClient):
     """Salesforce Streaming API client"""
     @translate_errors
     def __init__(self, authenticator: AuthenticatorBase, *,
                  replay: ReplayParameter = ReplayOption.NEW_EVENTS,
                  replay_fallback: Optional[ReplayOption] = None,
+                 replay_storage_policy: ReplayMarkerStoragePolicy
+                 = ReplayMarkerStoragePolicy.AUTOMATIC,
                  connection_timeout: Union[int, float] = 10.0,
                  max_pending_count: int = 100,
                  json_dumps: JsonDumper = json.dumps,
@@ -47,6 +64,8 @@ class Client(CometdClient):
         :param replay_fallback: Replay fallback policy, for when a subscribe \
         operation fails because a replay id was specified for a message \
         outside the retention window
+        :param replay_storage_policy: Defines at which point the \
+        replay marker of received messages will be stored
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
@@ -67,14 +86,22 @@ class Client(CometdClient):
         if not isinstance(authenticator, AuthenticatorBase):
             raise TypeError(f"authenticator should be an instance of "
                             f"{AuthenticatorBase.__name__}.")
-
+        #: Replay fallback policy, for when a subscribe
+        #: operation fails because a replay id was specified for a message
+        #: outside the retention window
         self.replay_fallback = replay_fallback
 
         replay_storage = self.create_replay_storage(replay)
         if not isinstance(replay_storage, ReplayMarkerStorage):
             raise TypeError("{!r} is not a valid type for the replay "
                             "parameter.".format(type(replay).__name__))
-        self.replay_storage = replay_storage
+        #: :obj:`ReplayMarkerStorage` instance capable of storing
+        #: :py:obj:`ReplayMarker` objects
+        self.replay_storage: ReplayMarkerStorage = replay_storage
+
+        #: Defines at which point the :py:obj:`ReplayMarker` of received
+        #: messages will be stored
+        self.replay_storage_policy = replay_storage_policy
 
         LOGGER.debug("Client created with replay storage: %r, "
                      "replay fallback: %r",
@@ -188,10 +215,13 @@ class Client(CometdClient):
         related error
         """
         response = await super().receive()
-        # only extract the replay id from the message once we're sure that
-        # it's going to be consumed, otherwise unconsumed messages might get
-        # skipped if client reconnects with replay
-        await self.replay_storage.extract_replay_id(response)
+
+        if self.replay_storage_policy == ReplayMarkerStoragePolicy.AUTOMATIC:
+            # only extract the replay id from the message once we're sure that
+            # it's going to be consumed (as opposed to extracting it when
+            # its received), otherwise unconsumed messages might get
+            # skipped if client reconnects with replay
+            await self.replay_storage.extract_replay_id(response)
         return response
 
     @translate_errors
@@ -257,11 +287,13 @@ class SalesforceStreamingClient(Client):
     class with a different
     :obj:`Authenticator <aiosfstream.auth.AuthenticatorBase>`
     """
-    def __init__(self, *,
+    def __init__(self, *,  # pylint: disable=too-many-locals
                  consumer_key: str, consumer_secret: str,
                  username: str, password: str,
                  replay: ReplayParameter = ReplayOption.NEW_EVENTS,
                  replay_fallback: Optional[ReplayOption] = None,
+                 replay_storage_policy: ReplayMarkerStoragePolicy
+                 = ReplayMarkerStoragePolicy.AUTOMATIC,
                  connection_timeout: Union[int, float] = 10.0,
                  max_pending_count: int = 100, sandbox: bool = False,
                  json_dumps: JsonDumper = json.dumps,
@@ -283,6 +315,8 @@ class SalesforceStreamingClient(Client):
         :param replay_fallback: Replay fallback policy, for when a subscribe \
         operation fails because a replay id was specified for a message \
         outside the retention window
+        :param replay_storage_policy: Defines at which point the \
+        replay marker of received messages will be stored
         :param connection_timeout: The maximum amount of time to wait for the \
         transport to re-establish a connection with the server when the \
         connection fails.
@@ -315,6 +349,7 @@ class SalesforceStreamingClient(Client):
             authenticator,
             replay=replay,
             replay_fallback=replay_fallback,
+            replay_storage_policy=replay_storage_policy,
             connection_timeout=connection_timeout,
             max_pending_count=max_pending_count,
             json_dumps=json_dumps,
