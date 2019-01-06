@@ -8,6 +8,6 @@ PROJECT_URLS = {
     "Coverage": "https://coveralls.io/github/robertmrk/aiosfstream",
     "Docs": "http://aiosfstream.readthedocs.io/"
 }
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 AUTHOR = "Róbert Márki"
 AUTHOR_EMAIL = "gsmiko@gmail.com"
