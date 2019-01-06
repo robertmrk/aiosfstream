@@ -2,7 +2,10 @@ include LICENSE.txt
 include DESCRIPTION.rst
 include README.rst
 include .pylintrc
+include aiosfstream/py.typed
 graft tests
 graft docs
 global-exclude *.pyc
+global-exclude .python-version
 prune docs/build
+prune venv*

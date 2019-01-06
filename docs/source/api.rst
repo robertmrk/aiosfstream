@@ -9,6 +9,8 @@ Client
 .. autoclass:: SalesforceStreamingClient
 
 .. autoclass:: Client
+    :members:
+    :undoc-members:
 
     .. autocomethod:: open
     .. autocomethod:: close
@@ -21,6 +23,10 @@ Client
     .. autoattribute:: connection_type
     .. autoattribute:: pending_count
     .. autoattribute:: has_pending_messages
+
+.. autoclass:: ReplayMarkerStoragePolicy
+    :members:
+    :undoc-members:
 
 Authenticators
 --------------
@@ -49,6 +55,8 @@ Replay
 
     .. autocomethod:: get_replay_marker
     .. autocomethod:: set_replay_marker
+    .. autocomethod:: extract_replay_id
+    .. autocomethod:: __call__
 
 .. autoclass:: MappingStorage
 
@@ -96,3 +104,6 @@ Exceptions
     .. autoattribute:: error_code
     .. autoattribute:: error_args
     .. autoattribute:: error_message
+
+.. autoexception:: ReplayError
+    :members:

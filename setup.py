@@ -4,21 +4,22 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 INSTALL_REQUIRES = [
-    "aiocometd>=0.3.1,<0.4.0",
+    "aiocometd>=0.4.1,<0.5.0",
     "aiohttp>=3.1,<4.0"
 ]
 TESTS_REQUIRE = [
     "asynctest>=0.12.0,<1.0.0",
-    "coverage>=4.5,<5.0"
+    "coverage>=4.5,<5.0",
+    "flake8",
+    "pylint",
+    "mypy"
 ]
 DOCS_REQUIRE = [
     "Sphinx>=1.7,<2.0",
-    "sphinxcontrib-asyncio>=0.2.0"
+    "sphinxcontrib-asyncio>=0.2.0",
+    "sphinx-autodoc-typehints"
 ]
-DEV_REQUIRE = [
-    "flake8",
-    "pylint"
-]
+DEV_REQUIRE = []
 
 
 def read(file_path):
@@ -49,6 +50,7 @@ setup(
     author=metadata["AUTHOR"],
     author_email=metadata["AUTHOR_EMAIL"],
     url=metadata["URL"],
+    project_urls=metadata["PROJECT_URLS"],
     license="MIT",
     packages=find_packages(exclude=("tests*", )),
     python_requires=">=3.6.0",
