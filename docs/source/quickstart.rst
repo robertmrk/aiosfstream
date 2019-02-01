@@ -186,7 +186,7 @@ it might miss some of the messages emitted by the server. This is where
 Salesforce's message durability comes in handy.
 
 Salesforce stores events for 24 hours. Events outside the 24-hour retention
-period are discarded. Salesforce extends the event messages with ``repalyId``
+period are discarded. Salesforce extends the event messages with ``replayId``
 and ``createdDate`` fields (called as :py:obj:`ReplayMarker` by aiosfstream).
 These fields can be used by the client to request the missed event messages
 from the server when it reconnects.
