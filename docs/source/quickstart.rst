@@ -130,6 +130,9 @@ A channel is a string that looks like a URL path such as ``/topic/foo`` or
 For detailed guidance on how to work with `PushTopics <PushTopic_>`_ or how
 to create `Generic Streaming Channels <GenericStreaming_>`_ please consult the
 `Streaming API documentation <api_>`_.
+For working with `Platform Events <PlatformEvents_>`_ or
+`Change Data Capture events <ChangeDataCapture_>`_ check out the linked
+documentation.
 
 Subscriptions
 -------------
