@@ -19,7 +19,7 @@ from aiosfstream.exceptions import translate_errors, translate_errors_context
 
 
 COMETD_PATH = "cometd"
-API_VERSION = "42.0"
+API_VERSION = "45.0"
 LOGGER = logging.getLogger(__name__)
 ReplayParameter = Union[ReplayOption,
                         ReplayMarkerStorage,
