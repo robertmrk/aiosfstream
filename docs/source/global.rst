@@ -14,3 +14,5 @@
 .. _connected_app: https://help.salesforce.com/articleView?id=connected_app_overview.htm&type=5
 .. _sf_auth: https://help.salesforce.com/articleView?id=remoteaccess_authenticate_overview.htm
 .. _web_server_auth: https://help.salesforce.com/articleView?id=remoteaccess_oauth_web_server_flow.htm&type=5
+.. _PlatformEvents: https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm
+.. _ChangeDataCapture: https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm

@@ -28,6 +28,9 @@ notifications of general events sent through the `Streaming API <api_>`_.
 For detailed guidance on how to work with `PushTopics <PushTopic_>`_ or how
 to create `Generic Streaming Channels <GenericStreaming_>`_ please consult the
 `Streaming API documentation <api_>`_.
+For working with `Platform Events <PlatformEvents_>`_ or
+`Change Data Capture events <ChangeDataCapture_>`_ check out the linked
+documentation.
 
 Features
 --------
@@ -38,6 +41,8 @@ Features
 - Subscribe to and receive messages on:
     - `PushTopics <PushTopic_>`_
     - `Generic Streaming Channels <GenericStreaming_>`_
+    - `Platform Events <PlatformEvents_>`_
+    - `Change Data Capture events <ChangeDataCapture_>`_
 - Support for `durable messages and replay of events <replay_>`_
 - Automatic recovery from replay errors
 
@@ -99,3 +104,5 @@ Requirements
 .. _PushTopic: https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/working_with_pushtopics.htm
 .. _GenericStreaming: https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/generic_streaming_intro.htm#generic_streaming_intro
 .. _replay: https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/using_streaming_api_durability.htm
+.. _PlatformEvents: https://developer.salesforce.com/docs/atlas.en-us.platform_events.meta/platform_events/platform_events_intro.htm
+.. _ChangeDataCapture: https://developer.salesforce.com/docs/atlas.en-us.change_data_capture.meta/change_data_capture/cdc_intro.htm
