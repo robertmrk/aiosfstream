@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.5.0 (2019-03-08)
+------------------
+
+- Add support for Change Data Capture events
+- Fix some typos in the documentation
+
 0.4.0 (2019-01-06)
 ------------------
 
