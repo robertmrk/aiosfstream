@@ -25,7 +25,8 @@ class ReplayOption(IntEnum):
 
 class ReplayMarker(NamedTuple):
     """Class for storing a message replay id and its creation date"""
-    #: Creation date of a message, as a ISO 8601 formatted  datetime string
+    #: Creation date of a message, as a ISO 8601 formatted  datetime string or
+    #: a unix timestamp as a string
     date: str
     #: Replay id of a message
     replay_id: int
@@ -82,15 +83,26 @@ class ReplayMarkerStorage(Extension):
         :raise ReplayError: If no creation date can be found in the *message*
         """
         # get the creation date of the message from a PushTopic message
-        # structure if it exists, or read it from a PlatfromEvent message
+        # structure if it exists, or read it from a PlatformEvent message
         # structure
         creation_date = None
+        # if the message contains a data property
         if "data" in message:
+            # get the creation date of the message from a PushTopic message
+            # or Generic Streaming message
             if ("event" in message["data"] and
                     "createdDate" in message["data"]["event"]):
                 creation_date = message["data"]["event"]["createdDate"]
             elif "payload" in message["data"]:
-                creation_date = message["data"]["payload"].get("CreatedDate")
+                payload = message["data"]["payload"]
+                # get the creation timestamp for a Change Data Capture event
+                if "ChangeEventHeader" in payload:
+                    timestamp = payload["ChangeEventHeader"]\
+                        .get("commitTimestamp")
+                    creation_date = str(timestamp)
+                # get the creation date of a Platform Event
+                else:
+                    creation_date = payload.get("CreatedDate")
 
         # raise an error if no valid creation date can be found
         if not isinstance(creation_date, str):

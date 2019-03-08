@@ -54,7 +54,7 @@ To take advantage of this feature, all you have to do is to
 pass an object capable of storing the most recent :py:obj:`ReplayMarker` for
 every channel.
 
-Salesforce extends the event messages with ``repalyId`` and ``createdDate``
+Salesforce extends the event messages with ``replayId`` and ``createdDate``
 fields (called as :py:obj:`ReplayMarker` by aiosfstream).
 
 The simplest way is to pass an object for the ``replay`` parameter that

@@ -181,6 +181,30 @@ class TestReplayStorage(TestCase):
 
         self.assertEqual(result, date)
 
+    def test_get_message_date_for_change_data_capture(self):
+        date = datetime.now(timezone.utc).isoformat()
+        timestamp = 1551962064000
+        message = {
+            "channel": "/foo/bar",
+            "data": {
+                "payload": {
+                    "ChangeEventHeader": {
+                        "commitTimestamp": timestamp
+                    },
+                    "value__c": "some value",
+                    "CreatedById": "id",
+                    "CreatedDate": date
+                },
+                "event": {
+                    "replayId": "id"
+                }
+            }
+        }
+
+        result = self.replay_storage.get_message_date(message)
+
+        self.assertEqual(result, str(timestamp))
+
     def test_get_message_date_error_if_no_date_found(self):
         with self.assertRaisesRegex(ReplayError,
                                     "No message creation date found."):

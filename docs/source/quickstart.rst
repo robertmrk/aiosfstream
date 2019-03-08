@@ -130,6 +130,9 @@ A channel is a string that looks like a URL path such as ``/topic/foo`` or
 For detailed guidance on how to work with `PushTopics <PushTopic_>`_ or how
 to create `Generic Streaming Channels <GenericStreaming_>`_ please consult the
 `Streaming API documentation <api_>`_.
+For working with `Platform Events <PlatformEvents_>`_ or
+`Change Data Capture events <ChangeDataCapture_>`_ check out the linked
+documentation.
 
 Subscriptions
 -------------
@@ -186,7 +189,7 @@ it might miss some of the messages emitted by the server. This is where
 Salesforce's message durability comes in handy.
 
 Salesforce stores events for 24 hours. Events outside the 24-hour retention
-period are discarded. Salesforce extends the event messages with ``repalyId``
+period are discarded. Salesforce extends the event messages with ``replayId``
 and ``createdDate`` fields (called as :py:obj:`ReplayMarker` by aiosfstream).
 These fields can be used by the client to request the missed event messages
 from the server when it reconnects.
