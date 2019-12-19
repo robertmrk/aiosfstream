@@ -14,8 +14,10 @@ from aiohttp.client_exceptions import ClientError
 from aiosfstream.exceptions import AuthenticationError
 
 
-TOKEN_URL = "https://login.salesforce.com/services/oauth2/token"
-SANDBOX_TOKEN_URL = "https://test.salesforce.com/services/oauth2/token"
+# formatted later with a domain
+BASE_URL = "https://{}.salesforce.com/services/oauth2/token"
+LOGIN_DOMAIN = "login"
+SANDBOX_DOMAIN = "test"
 
 
 # pylint: disable=too-many-instance-attributes
@@ -23,20 +25,29 @@ SANDBOX_TOKEN_URL = "https://test.salesforce.com/services/oauth2/token"
 class AuthenticatorBase(AuthExtension):
     """Abstract base class to serve as a base for implementing concrete
     authenticators"""
-    def __init__(self, sandbox: bool = False,
+    def __init__(self, sandbox: bool = None, domain: str = None,
                  json_dumps: JsonDumper = json.dumps,
                  json_loads: JsonLoader = json.loads) -> None:
         """
-        :param sandbox: Marks whether the authentication has to be done \
-        for a sandbox org or for a production org
+        :param sandbox: Marks whether the connection has to be made with \
+        a sandbox org or with a production org. Cannot be used concurrently with \
+        a value for domain.
+        :param domain: A custom salesforce domain instead of 'login' or 'test'. \
+        Cannot be used concurrently with a value for sandbox
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :param json_loads: Function for JSON deserialization, the default is \
         :func:`json.loads`
         """
-        #: Marks whether the authentication has to be done for a sandbox org \
-        #: or for a production org
-        self._sandbox = sandbox
+        if sandbox is not None and domain is not None:
+            raise ValueError('You cannot specify a value for sandbox AND domain. Please use just one.')
+        elif domain is not None:
+            self._domain = domain
+        elif sandbox is True:
+            self._domain = SANDBOX_DOMAIN
+        else:
+            self._domain = LOGIN_DOMAIN
+
         #: Salesforce session ID that can be used with the web services API
         self.access_token: Optional[str] = None
         #: Value is Bearer for all responses that include an access token
@@ -60,9 +71,7 @@ class AuthenticatorBase(AuthExtension):
     @property
     def _token_url(self) -> str:
         """The URL that should be used for token requests"""
-        if self._sandbox:
-            return SANDBOX_TOKEN_URL
-        return TOKEN_URL
+        return BASE_URL.format(self._domain)
 
     async def outgoing(self, payload: Payload, headers: Headers) -> None:
         """Process outgoing *payload* and *headers*
@@ -124,7 +133,8 @@ class AuthenticatorBase(AuthExtension):
 class PasswordAuthenticator(AuthenticatorBase):
     """Authenticator for using the OAuth 2.0 Username-Password Flow"""
     def __init__(self, consumer_key: str, consumer_secret: str,
-                 username: str, password: str, sandbox: bool = False,
+                 username: str, password: str,
+                 sandbox: bool = None, domain: str = None,
                  json_dumps: JsonDumper = json.dumps,
                  json_loads: JsonLoader = json.loads) -> None:
         """
@@ -134,14 +144,18 @@ class PasswordAuthenticator(AuthenticatorBase):
         connected app definition
         :param username: Salesforce username
         :param password: Salesforce password
-        :param sandbox: Marks whether the authentication has to be done \
-        for a sandbox org or for a production org
+        :param sandbox: Marks whether the connection has to be made with \
+        a sandbox org or with a production org. Cannot be used concurrently with \
+        a value for domain.
+        :param domain: A custom salesforce domain instead of 'login' or 'test'. \
+        Cannot be used concurrently with a value for sandbox
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :param json_loads: Function for JSON deserialization, the default is \
         :func:`json.loads`
         """
         super().__init__(sandbox=sandbox,
+                         domain=domain,
                          json_dumps=json_dumps,
                          json_loads=json_loads)
         #: OAuth2 client id
@@ -178,7 +192,8 @@ class PasswordAuthenticator(AuthenticatorBase):
 class RefreshTokenAuthenticator(AuthenticatorBase):
     """Authenticator for using the OAuth 2.0 Refresh Token Flow"""
     def __init__(self, consumer_key: str, consumer_secret: str,
-                 refresh_token: str, sandbox: bool = False,
+                 refresh_token: str,
+                 sandbox: bool = None, domain: str = None,
                  json_dumps: JsonDumper = json.dumps,
                  json_loads: JsonLoader = json.loads) -> None:
         """
@@ -189,14 +204,18 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
         :param refresh_token: A refresh token obtained from Salesforce \
         by using one of its authentication methods (for example with the \
         OAuth 2.0 Web Server Authentication Flow)
-        :param sandbox: Marks whether the authentication has to be done \
-        for a sandbox org or for a production org
+        :param sandbox: Marks whether the connection has to be made with \
+        a sandbox org or with a production org. Cannot be used concurrently with \
+        a value for domain.
+        :param domain: A custom salesforce domain instead of 'login' or 'test'. \
+        Cannot be used concurrently with a value for sandbox
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :param json_loads: Function for JSON deserialization, the default is \
         :func:`json.loads`
         """
         super().__init__(sandbox=sandbox,
+                         domain=domain,
                          json_dumps=json_dumps,
                          json_loads=json_loads)
         #: OAuth2 client id

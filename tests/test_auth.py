@@ -5,7 +5,7 @@ from asynctest import TestCase, mock
 from aiohttp.client_exceptions import ClientError
 
 from aiosfstream.auth import AuthenticatorBase, PasswordAuthenticator, \
-    TOKEN_URL, SANDBOX_TOKEN_URL, RefreshTokenAuthenticator
+    LOGIN_DOMAIN, SANDBOX_DOMAIN, BASE_URL, RefreshTokenAuthenticator
 from aiosfstream.exceptions import AuthenticationError
 
 
@@ -131,12 +131,31 @@ class TestAuthenticatorBase(TestCase):
     def test_token_url_non_sandbox(self):
         auth = Authenticator()
 
-        self.assertEqual(auth._token_url, TOKEN_URL)
+        self.assertEqual(auth._token_url, BASE_URL.format(LOGIN_DOMAIN))
 
     def test_token_url_sandbox(self):
         auth = Authenticator(sandbox=True)
 
-        self.assertEqual(auth._token_url, SANDBOX_TOKEN_URL)
+        self.assertEqual(auth._token_url, BASE_URL.format(SANDBOX_DOMAIN))
+
+    def test_custom_url_sandbox(self):
+        domain = 'sparkles'
+        auth = Authenticator(domain=domain)
+        self.assertEqual(auth._token_url, BASE_URL.format(domain))
+
+    def test_sandbox_true_with_custom_domain(self):
+        domain = 'sparkles'
+        sandbox = True
+        with self.assertRaisesRegex(ValueError,
+                                    "You cannot specify a value for sandbox AND domain"):
+            auth = Authenticator(sandbox=sandbox, domain=domain)
+
+    def test_sandbox_false_with_custom_domain(self):
+        domain = 'sparkles'
+        sandbox = False
+        with self.assertRaisesRegex(ValueError,
+                                    "You cannot specify a value for sandbox AND domain"):
+            auth = Authenticator(sandbox=sandbox, domain=domain)
 
 
 class TestPasswordAuthenticator(TestCase):

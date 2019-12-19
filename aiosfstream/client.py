@@ -295,7 +295,8 @@ class SalesforceStreamingClient(Client):
                  replay_storage_policy: ReplayMarkerStoragePolicy
                  = ReplayMarkerStoragePolicy.AUTOMATIC,
                  connection_timeout: Union[int, float] = 10.0,
-                 max_pending_count: int = 100, sandbox: bool = False,
+                 max_pending_count: int = 100,
+                 sandbox: bool = None, domain: str = None,
                  json_dumps: JsonDumper = json.dumps,
                  json_loads: JsonLoader = json.loads,
                  loop: Optional[asyncio.AbstractEventLoop] = None):
@@ -326,7 +327,10 @@ class SalesforceStreamingClient(Client):
         consumed. \
         If it is less than or equal to zero, the count is infinite.
         :param sandbox: Marks whether the connection has to be made with \
-        a sandbox org or with a production org
+        a sandbox org or with a production org. Cannot be used concurrently with \
+        a value for domain.
+        :param domain: A custom salesforce domain instead of 'login' or 'test'. \
+        Cannot be used concurrently with a value for sandbox
         :param json_dumps: Function for JSON serialization, the default is \
         :func:`json.dumps`
         :param json_loads: Function for JSON deserialization, the default is \
@@ -342,6 +346,7 @@ class SalesforceStreamingClient(Client):
             username=username,
             password=password,
             sandbox=sandbox,
+            domain=domain,
             json_dumps=json_dumps,
             json_loads=json_loads,
         )
