@@ -162,7 +162,7 @@ class PasswordAuthenticator(AuthenticatorBase):
                f"password={reprlib.repr(self.password)})"
 
     async def _authenticate(self) -> Tuple[int, JsonObject]:
-        async with ClientSession(json_serialize=self.json_dumps) as session:
+        async with ClientSession(json_serialize=self.json_dumps,trust_env=True) as session:
             data = {
                 "grant_type": "password",
                 "client_id": self.client_id,
@@ -214,7 +214,7 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
                f"refresh_token={reprlib.repr(self.refresh_token)})"
 
     async def _authenticate(self) -> Tuple[int, JsonObject]:
-        async with ClientSession(json_serialize=self.json_dumps) as session:
+        async with ClientSession(json_serialize=self.json_dumps,trust_env=True) as session:
             data = {
                 "grant_type": "refresh_token",
                 "client_id": self.client_id,
