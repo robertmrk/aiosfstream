@@ -1,8 +1,10 @@
 """Authenticatior class implementations"""
+import time
 from abc import abstractmethod
 from http import HTTPStatus
 import reprlib
 import json
+import jwt
 from typing import Optional, Tuple
 
 from aiocometd import AuthExtension
@@ -220,6 +222,61 @@ class RefreshTokenAuthenticator(AuthenticatorBase):
                 "client_id": self.client_id,
                 "client_secret": self.client_secret,
                 "refresh_token": self.refresh_token
+            }
+            response = await session.post(self._token_url, data=data)
+            response_data = await response.json(loads=self.json_loads)
+            return response.status, response_data
+
+
+class JWTAuthenticator(AuthenticatorBase):
+    """Authenticator for using JWT Flow"""
+
+    def __init__(self, consumer_key: str,
+                 username: str, private_key, sandbox: bool = False,
+                 json_dumps: JsonDumper = json.dumps,
+                 json_loads: JsonLoader = json.loads) -> None:
+        """
+        :param consumer_key: Consumer key from the Salesforce connected \
+        app definition
+        :param username: Salesforce username
+        :param private_key: Private key registered in Salesforce connected app
+        :param sandbox: Marks whether the authentication has to be done \
+        for a sandbox org or for a production org
+        :param json_dumps: Function for JSON serialization, the default is \
+        :func:`json.dumps
+        :param json_loads: Function for JSON deserialization, the default is \
+        :func:`json.loads`
+        """
+        super().__init__(sandbox=sandbox,
+                         json_dumps=json_dumps,
+                         json_loads=json_loads)
+        #: OAuth2 client id
+        self.client_id = consumer_key
+        #: Salesforce username
+        self.username = username
+        #: Salesforce username
+        self.private_key = private_key
+
+    def __repr__(self) -> str:
+        """Formal string representation"""
+        cls_name = type(self).__name__
+        return f"{cls_name}(consumer_key={reprlib.repr(self.client_id)}," \
+               f"username={reprlib.repr(self.username)}, " \
+               f"private_key={reprlib.repr(self.private_key)})"
+
+    async def _authenticate(self) -> Tuple[int, JsonObject]:
+        async with ClientSession(json_serialize=self.json_dumps) as session:
+            claim = {
+                'iss': self.client_id,
+                'exp': int(time.time()) + 300,
+                'aud': 'https://{}.salesforce.com'.format('test' if self._sandbox else 'login'),
+                'sub': self.username,
+            }
+            assertion = jwt.encode(claim, self.private_key, algorithm='RS256', headers={
+                'alg': 'RS256'})
+            data = {
+                "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                "assertion": assertion,
             }
             response = await session.post(self._token_url, data=data)
             response_data = await response.json(loads=self.json_loads)

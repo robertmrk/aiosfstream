@@ -38,6 +38,7 @@ Features
 - Supported authentication types:
    - using a username and password
    - using a refresh token
+   - using JWT
 - Subscribe to and receive messages on:
     - `PushTopics <PushTopic_>`_
     - `Generic Streaming Channels <GenericStreaming_>`_
