@@ -5,7 +5,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 INSTALL_REQUIRES = [
     "aiocometd>=0.4.1,<0.5.0",
-    "aiohttp>=3.1,<4.0"
+    "aiohttp>=3.1,<4.0",
+    "PyJWT>=2.1.0,<2.4.1"
 ]
 TESTS_REQUIRE = [
     "asynctest>=0.12.0,<1.0.0",
