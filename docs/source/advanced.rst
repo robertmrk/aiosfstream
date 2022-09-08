@@ -291,7 +291,7 @@ reconnect to the server.
         print("Connection is lost with the server. "
               "Couldn't reconnect in 60 seconds.")
 
-The defaul value is ``10`` seconds. If you pass ``None`` as the
+The defaul value is ``10`` seconds. If you pass ``0`` as the
 ``connection_timeout`` value, then the client will keep on trying indefinitely.
 
 Prefetching
